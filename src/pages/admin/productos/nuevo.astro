@@ -1,0 +1,170 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Crear Producto - FashionMarket">
+  <div class="max-w-2xl">
+    <h1 class="text-3xl font-display font-bold text-brand-navy mb-8">
+      Crear Nuevo Producto
+    </h1>
+
+    <form class="space-y-6 bg-white p-6 rounded-lg border border-neutral-200">
+      {/* Product Name */}
+      <div>
+        <label for="name" class="block text-sm font-semibold text-neutral-900 mb-2">
+          Nombre del Producto *
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          class="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy"
+          placeholder="Ej: Camisa Oxford Premium"
+        />
+      </div>
+
+      {/* Category */}
+      <div>
+        <label for="category" class="block text-sm font-semibold text-neutral-900 mb-2">
+          Categoría *
+        </label>
+        <select
+          id="category"
+          name="category_id"
+          required
+          class="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy"
+        >
+          <option value="">Selecciona una categoría</option>
+          <option value="camisas">Camisas</option>
+          <option value="pantalones">Pantalones</option>
+          <option value="trajes">Trajes</option>
+        </select>
+      </div>
+
+      {/* Description */}
+      <div>
+        <label for="description" class="block text-sm font-semibold text-neutral-900 mb-2">
+          Descripción *
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          required
+          rows="4"
+          class="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy"
+          placeholder="Descripción detallada del producto..."
+        ></textarea>
+      </div>
+
+      {/* Price */}
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="price" class="block text-sm font-semibold text-neutral-900 mb-2">
+            Precio (USD) *
+          </label>
+          <input
+            type="number"
+            id="price"
+            name="price"
+            step="0.01"
+            min="0"
+            required
+            class="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy"
+            placeholder="99.99"
+          />
+        </div>
+
+        {/* Stock */}
+        <div>
+          <label for="stock" class="block text-sm font-semibold text-neutral-900 mb-2">
+            Stock *
+          </label>
+          <input
+            type="number"
+            id="stock"
+            name="stock"
+            min="0"
+            required
+            class="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy"
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      {/* Images Upload */}
+      <div>
+        <label for="images" class="block text-sm font-semibold text-neutral-900 mb-2">
+          Imágenes del Producto
+        </label>
+        <div class="border-2 border-dashed border-neutral-300 rounded-lg p-8 text-center hover:border-brand-navy transition-colors">
+          <input
+            type="file"
+            id="images"
+            name="images"
+            multiple
+            accept="image/*"
+            class="hidden"
+          />
+          <label for="images" class="cursor-pointer">
+            <p class="text-neutral-600 mb-2">
+              Arrastra y suelta imágenes aquí o haz clic para seleccionar
+            </p>
+            <p class="text-sm text-neutral-500">
+              PNG, JPG, GIF (máx. 5MB cada una)
+            </p>
+          </label>
+        </div>
+      </div>
+
+      {/* Additional Fields */}
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="sku" class="block text-sm font-semibold text-neutral-900 mb-2">
+            SKU
+          </label>
+          <input
+            type="text"
+            id="sku"
+            name="sku"
+            class="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy"
+            placeholder="CSA-001"
+          />
+        </div>
+
+        <div>
+          <label for="material" class="block text-sm font-semibold text-neutral-900 mb-2">
+            Material
+          </label>
+          <input
+            type="text"
+            id="material"
+            name="material"
+            class="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy"
+            placeholder="Algodón 100%"
+          />
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div class="flex gap-4 pt-6 border-t border-neutral-200">
+        <button
+          type="submit"
+          class="btn-primary flex-1"
+        >
+          Crear Producto
+        </button>
+        <a
+          href="/admin/productos"
+          class="btn-secondary flex-1 text-center"
+        >
+          Cancelar
+        </a>
+      </div>
+    </form>
+
+    <p class="mt-6 text-sm text-neutral-500">
+      * Campos requeridos
+    </p>
+  </div>
+</AdminLayout>

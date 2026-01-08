@@ -1,0 +1,27 @@
+{
+  "name": "fashionmarket",
+  "version": "0.1.0",
+  "description": "Premium men's fashion e-commerce store - Headless Architecture",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^5.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "nanostores": "^0.10.2",
+    "tailwindcss": "^3.3.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0"
+  },
+  "devDependencies": {
+    "@astrojs/react": "^3.0.0",
+    "@astrojs/tailwind": "^5.0.0",
+    "typescript": "^5.3.0"
+  }
+}

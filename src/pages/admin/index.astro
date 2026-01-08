@@ -1,0 +1,65 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Panel de Administración - FashionMarket">
+  <div class="space-y-8">
+    {/* Header */}
+    <div>
+      <h1 class="text-3xl font-display font-bold text-brand-navy">
+        Dashboard
+      </h1>
+      <p class="text-neutral-600 mt-2">
+        Bienvenido al panel de administración
+      </p>
+    </div>
+
+    {/* Stats Grid */}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {[
+        { label: 'Productos', value: '0', icon: '📦' },
+        { label: 'Categorías', value: '0', icon: '🏷️' },
+        { label: 'Órdenes', value: '0', icon: '🛒' },
+        { label: 'Ingresos', value: '$0', icon: '💰' },
+      ].map((stat) => (
+        <div class="bg-white p-6 rounded-lg border border-neutral-200">
+          <div class="text-3xl mb-2">{stat.icon}</div>
+          <p class="text-neutral-600 text-sm font-medium">{stat.label}</p>
+          <p class="text-2xl font-bold text-brand-navy mt-2">{stat.value}</p>
+        </div>
+      ))}
+    </div>
+
+    {/* Quick Actions */}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white p-6 rounded-lg border border-neutral-200">
+        <h2 class="text-lg font-bold text-brand-navy mb-4">Acciones Rápidas</h2>
+        <ul class="space-y-2">
+          <li>
+            <a
+              href="/admin/productos/nuevo"
+              class="block text-brand-navy hover:text-brand-charcoal font-medium"
+            >
+              + Crear nuevo producto
+            </a>
+          </li>
+          <li>
+            <a
+              href="/admin/productos"
+              class="block text-brand-navy hover:text-brand-charcoal font-medium"
+            >
+              → Ver inventario completo
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg border border-neutral-200">
+        <h2 class="text-lg font-bold text-brand-navy mb-4">Soporte</h2>
+        <p class="text-neutral-600 text-sm">
+          ¿Necesitas ayuda? Consulta la documentación o contáctanos para asistencia técnica.
+        </p>
+      </div>
+    </div>
+  </div>
+</AdminLayout>

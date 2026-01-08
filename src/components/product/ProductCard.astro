@@ -1,0 +1,57 @@
+---
+import type { Product } from '@lib/supabase';
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+
+const formatPrice = (cents: number) => {
+  return `$${(cents / 100).toFixed(2)}`;
+};
+---
+
+<a
+  href={`/productos/${product.slug}`}
+  class="group block overflow-hidden bg-white hover:shadow-lg transition-shadow duration-300"
+>
+  {/* Product Image */}
+  <div class="aspect-square overflow-hidden bg-neutral-200">
+    {product.images[0] ? (
+      <img
+        src={product.images[0]}
+        alt={product.name}
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      />
+    ) : (
+      <div class="w-full h-full flex items-center justify-center bg-neutral-300">
+        <span class="text-neutral-500">Sin imagen</span>
+      </div>
+    )}
+  </div>
+
+  {/* Product Info */}
+  <div class="p-4 space-y-2">
+    <h3 class="font-display text-lg font-semibold text-brand-navy group-hover:text-brand-charcoal transition-colors">
+      {product.name}
+    </h3>
+
+    {/* Price */}
+    <div class="flex items-baseline gap-2">
+      <span class="text-2xl font-bold text-brand-navy">
+        {formatPrice(product.price)}
+      </span>
+    </div>
+
+    {/* Stock Status */}
+    <p class={`text-sm ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+      {product.stock > 0 ? `${product.stock} en stock` : 'Agotado'}
+    </p>
+
+    {/* Description Preview */}
+    <p class="text-neutral-600 text-sm line-clamp-2">
+      {product.description}
+    </p>
+  </div>
+</a>

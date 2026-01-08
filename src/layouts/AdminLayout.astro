@@ -1,0 +1,54 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="flex min-h-screen">
+    {/* Sidebar */}
+    <aside class="w-64 bg-white border-r border-neutral-200 p-6">
+      <h2 class="text-xl font-display font-bold text-brand-navy mb-8">
+        Panel Admin
+      </h2>
+
+      <nav class="space-y-4">
+        <a
+          href="/admin"
+          class="block px-4 py-2 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-100 transition-colors"
+        >
+          Dashboard
+        </a>
+        <a
+          href="/admin/productos"
+          class="block px-4 py-2 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-100 transition-colors"
+        >
+          Productos
+        </a>
+        <a
+          href="/admin/productos/nuevo"
+          class="block px-4 py-2 rounded-lg text-sm font-medium text-white bg-brand-navy hover:bg-brand-charcoal transition-colors"
+        >
+          Nuevo Producto
+        </a>
+        <hr class="my-4" />
+        <a
+          href="/api/logout"
+          class="block px-4 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+        >
+          Cerrar Sesión
+        </a>
+      </nav>
+    </aside>
+
+    {/* Main Content */}
+    <main class="flex-1 bg-neutral-50 p-8">
+      <slot />
+    </main>
+  </div>
+</BaseLayout>

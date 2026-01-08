@@ -1,0 +1,25 @@
+---
+import PublicLayout from '@layouts/PublicLayout.astro';
+import CartSlideOver from '@components/islands/CartSlideOver';
+---
+
+<PublicLayout title="Carrito - FashionMarket">
+  <section class="py-12 md:py-16">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-display font-bold text-brand-navy mb-8">
+        Tu Carrito
+      </h1>
+
+      <div class="bg-white border border-neutral-200 rounded-lg p-8">
+        <p class="text-center text-neutral-600 text-lg">
+          El carrito se maneja mediante el panel deslizante en la esquina superior derecha.
+        </p>
+        <p class="text-center text-neutral-500 text-sm mt-4">
+          Haz clic en el icono del carrito para abrirlo y gestionar tus productos.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <CartSlideOver client:load />
+</PublicLayout>

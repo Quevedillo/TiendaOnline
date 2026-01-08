@@ -1,0 +1,57 @@
+---
+import PublicLayout from '@layouts/PublicLayout.astro';
+import ProductCard from '@components/product/ProductCard.astro';
+import { supabase } from '@lib/supabase';
+import type { Product } from '@lib/supabase';
+
+// Fetch all products at build time (SSG)
+const { data: products, error } = await supabase
+  .from('products')
+  .select('*')
+  .order('created_at', { ascending: false });
+
+if (error) {
+  console.error('Error fetching products:', error);
+}
+
+const productsList: Product[] = products || [];
+---
+
+<PublicLayout title="Catálogo - FashionMarket" description="Explore our complete collection of premium men's fashion">
+  {/* Header */}
+  <section class="bg-white border-b border-neutral-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 class="text-4xl font-display font-bold text-brand-navy">
+        Catálogo Completo
+      </h1>
+      <p class="text-neutral-600 mt-2">
+        {productsList.length} productos disponibles
+      </p>
+    </div>
+  </section>
+
+  {/* Products Grid */}
+  <section class="py-12 md:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {productsList.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {productsList.map((product) => (
+            <ProductCard product={product} />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12">
+          <p class="text-gray-500 text-lg">
+            No hay productos disponibles en este momento.
+          </p>
+          <a
+            href="/"
+            class="inline-block mt-4 text-brand-navy hover:text-brand-charcoal font-semibold"
+          >
+            Volver al inicio
+          </a>
+        </div>
+      )}
+    </div>
+  </section>
+</PublicLayout>

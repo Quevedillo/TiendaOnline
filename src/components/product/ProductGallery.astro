@@ -1,0 +1,51 @@
+---
+interface ProductGalleryProps {
+  images: string[];
+  productName: string;
+}
+
+const { images, productName } = Astro.props;
+---
+
+<div class="space-y-4">
+  {/* Main Image */}
+  <div class="aspect-square bg-neutral-200 overflow-hidden">
+    {images.length > 0 ? (
+      <img
+        id="main-image"
+        src={images[0]}
+        alt={productName}
+        class="w-full h-full object-cover"
+      />
+    ) : (
+      <div class="w-full h-full flex items-center justify-center bg-neutral-300">
+        <span class="text-neutral-500">Sin imagen disponible</span>
+      </div>
+    )}
+  </div>
+
+  {/* Thumbnail Gallery */}
+  {images.length > 1 && (
+    <div class="grid grid-cols-4 gap-2">
+      {images.map((image, index) => (
+        <button
+          key={index}
+          onclick={`document.getElementById('main-image').src = '${image}'`}
+          class="aspect-square overflow-hidden border-2 border-transparent hover:border-brand-navy transition-colors"
+        >
+          <img
+            src={image}
+            alt={`${productName} - Imagen ${index + 1}`}
+            class="w-full h-full object-cover"
+          />
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+
+<style>
+  img {
+    display: block;
+  }
+</style>

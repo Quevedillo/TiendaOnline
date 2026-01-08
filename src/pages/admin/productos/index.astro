@@ -1,0 +1,126 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { supabase } from '@lib/supabase';
+import type { Product } from '@lib/supabase';
+
+// Fetch all products for admin
+const { data: products, error } = await supabase
+  .from('products')
+  .select('*, categories(name)')
+  .order('created_at', { ascending: false });
+
+const productsList: Product[] = products || [];
+---
+
+<AdminLayout title="Gestión de Productos - FashionMarket">
+  <div class="space-y-8">
+    {/* Header */}
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-display font-bold text-brand-navy">
+          Gestión de Inventario
+        </h1>
+        <p class="text-neutral-600 mt-2">
+          Total de productos: <span class="font-bold text-brand-navy">{productsList.length}</span>
+        </p>
+      </div>
+      <a
+        href="/admin/productos/nuevo"
+        class="btn-primary"
+      >
+        + Crear Producto
+      </a>
+    </div>
+
+    {/* Products Table */}
+    {productsList.length > 0 ? (
+      <div class="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-neutral-50 border-b border-neutral-200">
+            <tr>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">
+                Producto
+              </th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">
+                Categoría
+              </th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">
+                Precio
+              </th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">
+                Stock
+              </th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-neutral-900">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-200">
+            {productsList.map((product) => (
+              <tr class="hover:bg-neutral-50 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-4">
+                    {product.images && product.images.length > 0 && (
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        class="w-12 h-12 object-cover rounded"
+                      />
+                    )}
+                    <div>
+                      <p class="font-semibold text-neutral-900">{product.name}</p>
+                      <p class="text-xs text-neutral-500">{product.slug}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-neutral-600">
+                  {/* Add category relationship */}
+                  Categoría
+                </td>
+                <td class="px-6 py-4 font-semibold text-neutral-900">
+                  ${(product.price / 100).toFixed(2)}
+                </td>
+                <td class="px-6 py-4">
+                  <span class={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                    product.stock > 0
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {product.stock}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  <div class="flex items-center gap-2">
+                    <a
+                      href={`/admin/productos/${product.id}`}
+                      class="text-brand-navy hover:text-brand-charcoal font-medium"
+                    >
+                      Editar
+                    </a>
+                    <button
+                      class="text-red-600 hover:text-red-800 font-medium"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div class="bg-white border border-neutral-200 rounded-lg p-12 text-center">
+        <p class="text-neutral-600 text-lg mb-4">
+          No hay productos en el inventario
+        </p>
+        <a
+          href="/admin/productos/nuevo"
+          class="inline-block btn-primary"
+        >
+          Crear primer producto
+        </a>
+      </div>
+    )}
+  </div>
+</AdminLayout>

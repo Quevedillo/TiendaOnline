@@ -1,0 +1,37 @@
+---
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  class?: string;
+  type?: 'button' | 'submit' | 'reset';
+}
+
+const {
+  variant = 'primary',
+  size = 'md',
+  disabled = false,
+  class: customClass = '',
+  type = 'button',
+} = Astro.props;
+
+const baseStyles = 'font-semibold transition-colors inline-flex items-center justify-center';
+
+const variantStyles = {
+  primary: 'bg-brand-navy text-white hover:bg-brand-charcoal disabled:opacity-50',
+  secondary: 'bg-neutral-300 text-brand-navy hover:bg-neutral-400 disabled:opacity-50',
+  outline: 'border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white disabled:opacity-50',
+};
+
+const sizeStyles = {
+  sm: 'px-3 py-2 text-sm',
+  md: 'px-4 py-3 text-base',
+  lg: 'px-6 py-4 text-lg',
+};
+
+const classString = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${customClass}`;
+---
+
+<button type={type} disabled={disabled} class={classString}>
+  <slot />
+</button>
