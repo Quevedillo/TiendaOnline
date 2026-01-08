@@ -102,14 +102,28 @@ CREATE POLICY "Admin users: Admin update"
   );
 
 -- ============================================================================
--- Trigger to create profile entry when user signs up
+-- Trigger to create profile entry and check for admin email when user signs up
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Create profile for the new user
   INSERT INTO profiles (id, email, full_name)
   VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  
+  -- If email is the admin email, automatically create admin record
+  IF new.email = 'joseluisgq17@gmail.com' THEN
+    INSERT INTO admin_users (id, email, full_name, role, is_active)
+    VALUES (
+      new.id,
+      new.email,
+      new.raw_user_meta_data->>'full_name',
+      'admin',
+      true
+    );
+  END IF;
+  
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -125,12 +139,17 @@ CREATE TRIGGER on_auth_user_created
 -- Notes for Admin Account Creation
 -- ============================================================================
 -- 
--- After deployment:
--- 1. Create first admin user in Supabase Auth UI
--- 2. Get the UUID of that user
--- 3. Insert into admin_users table with that UUID
--- 4. Set role='admin' and is_active=true
+-- AUTOMATIC ADMIN CREATION:
+-- When a user registers with email: joseluisgq17@gmail.com
+-- They will AUTOMATICALLY be created as an admin!
 --
--- Example SQL (after getting UUID from step 2):
--- INSERT INTO admin_users (id, email, full_name, role, is_active)
--- VALUES ('11111111-1111-1111-1111-111111111111', 'admin@email.com', 'Admin', 'admin', true);
+-- HOW TO USE:
+-- 1. Execute database.sql in Supabase SQL Editor
+-- 2. Execute auth-setup.sql in Supabase SQL Editor
+-- 3. Go to http://localhost:3000/auth/login
+-- 4. Click "Registrarse"
+-- 5. Register with email: joseluisgq17@gmail.com
+-- 6. You're now an admin - go to http://localhost:3000/admin/login and login
+-- 7. You'll have full admin access!
+--
+-- To add more admin emails, modify the trigger above with additional conditions.
