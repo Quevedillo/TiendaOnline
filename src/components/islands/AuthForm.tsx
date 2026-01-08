@@ -178,19 +178,6 @@ export default function AuthForm() {
                     : 'Crear Cuenta'}
               </button>
             </form>
-
-            {/* Admin Link */}
-            <div className="mt-6 pt-6 border-t border-neutral-200">
-              <p className="text-center text-sm text-neutral-600 mb-2">
-                ¿Eres administrador?
-              </p>
-              <a
-                href="/admin/login"
-                className="block w-full py-2 text-center text-brand-navy font-semibold border-2 border-brand-navy rounded hover:bg-brand-navy hover:text-white transition-colors"
-              >
-                Panel Administrativo
-              </a>
-            </div>
           </div>
         </div>
 

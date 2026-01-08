@@ -51,6 +51,12 @@ CREATE POLICY "Users can update their own profile"
 -- Update existing RLS policies for admin_users to support auth
 -- ============================================================================
 
+-- Allow the trigger/service role to insert admin records
+CREATE POLICY "Admin users: System can insert admins"
+  ON admin_users
+  FOR INSERT
+  WITH CHECK (true);
+
 -- Allow authenticated users to read admin_users (for verification)
 DROP POLICY IF EXISTS "Admin users: Public read (limited)" ON admin_users;
 
@@ -78,7 +84,8 @@ CREATE POLICY "Admin users: Admin insert"
   ON admin_users
   FOR INSERT
   WITH CHECK (
-    EXISTS (
+    auth.uid() = id
+    OR EXISTS (
       SELECT 1 FROM admin_users
       WHERE admin_users.id = auth.uid()
       AND admin_users.is_active = true
@@ -93,7 +100,8 @@ CREATE POLICY "Admin users: Admin update"
   ON admin_users
   FOR UPDATE
   USING (
-    EXISTS (
+    auth.uid() = id
+    OR EXISTS (
       SELECT 1 FROM admin_users
       WHERE admin_users.id = auth.uid()
       AND admin_users.is_active = true
@@ -107,21 +115,26 @@ CREATE POLICY "Admin users: Admin update"
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  admin_email_constant VARCHAR(255) := 'joseluisgq17@gmail.com';
 BEGIN
   -- Create profile for the new user
   INSERT INTO profiles (id, email, full_name)
-  VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  VALUES (new.id, new.email, COALESCE(new.raw_user_meta_data->>'full_name', 'Usuario'))
+  ON CONFLICT (id) DO NOTHING;
   
   -- If email is the admin email, automatically create admin record
-  IF new.email = 'joseluisgq17@gmail.com' THEN
+  IF new.email = admin_email_constant THEN
     INSERT INTO admin_users (id, email, full_name, role, is_active)
     VALUES (
       new.id,
       new.email,
-      new.raw_user_meta_data->>'full_name',
+      COALESCE(new.raw_user_meta_data->>'full_name', 'Admin'),
       'admin',
       true
-    );
+    )
+    ON CONFLICT (email) DO UPDATE
+    SET is_active = true, role = 'admin';
   END IF;
   
   RETURN new;
