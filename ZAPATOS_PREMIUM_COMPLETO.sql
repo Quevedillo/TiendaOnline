@@ -11,17 +11,23 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================================================
--- PASO 1: ACTUALIZAR TABLA CATEGORIES
+-- PASO 1: CREAR TABLA CATEGORIES (si no existe)
 -- ============================================================================
 
-ALTER TABLE categories 
-ADD COLUMN IF NOT EXISTS description TEXT,
-ADD COLUMN IF NOT EXISTS icon VARCHAR,
-ADD COLUMN IF NOT EXISTS display_order INT DEFAULT 0;
+DROP TABLE IF EXISTS categories CASCADE;
 
--- Limpiar y repoblar con categorías de zapatos
-DELETE FROM categories;
+CREATE TABLE categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR NOT NULL,
+  slug VARCHAR NOT NULL UNIQUE,
+  description TEXT,
+  icon VARCHAR,
+  display_order INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
+-- Insertar categorías de zapatos
 INSERT INTO categories (name, slug, description, icon, display_order) VALUES
 ('Basketball', 'basketball', 'Zapatos de baloncesto: Jordan, Kyrie, LeBron y más', '🏀', 1),
 ('Lifestyle', 'lifestyle', 'Sneakers casuales para el día a día: Air Force, Stan Smith, etc.', '👟', 2),
