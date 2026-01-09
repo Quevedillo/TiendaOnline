@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-brand-cream text-neutral-900;
+    @apply bg-brand-black text-white;
   }
 
   h1,

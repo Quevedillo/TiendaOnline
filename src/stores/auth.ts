@@ -132,6 +132,7 @@ export async function login(email: string, password: string) {
       user: data.user,
       isLoading: false,
       error: null,
+      initialized: true,
     });
 
     return { success: true, user: data.user };
@@ -164,6 +165,7 @@ export async function register(email: string, password: string, fullName: string
       user: data.user,
       isLoading: false,
       error: null,
+      initialized: true,
     });
 
     return { success: true, user: data.user };
@@ -188,6 +190,7 @@ export async function logout() {
       user: null,
       isLoading: false,
       error: null,
+      initialized: true,
     });
 
     localStorage.removeItem('auth_user');

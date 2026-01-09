@@ -9,6 +9,8 @@ export default {
           black: '#0A0A0A',
           dark: '#141414',
           gray: '#1C1C1C',
+          navy: '#1A1A2E',
+          charcoal: '#0F0F0F',
           red: '#FF3131',
           orange: '#FF6B35',
           cream: '#F5F5F5',
