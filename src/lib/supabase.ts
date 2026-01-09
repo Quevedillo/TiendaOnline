@@ -25,6 +25,9 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  description?: string;
+  icon?: string;
+  display_order?: number;
   created_at: string;
 }
 
@@ -33,10 +36,24 @@ export interface Product {
   name: string;
   slug: string;
   description: string;
+  detailed_description?: Record<string, any>; // { materials, fit, care_instructions }
   price: number; // in cents
+  original_price?: number; // MSRP original
   stock: number;
   category_id: string;
   images: string[];
+  
+  // Zapatos-specific fields
+  brand: string; // Jordan, Adidas, Nike, etc.
+  model?: string; // AJ1, Yeezy 700, etc.
+  colorway?: string; // Red Toe, Bred, Chicago, etc.
+  sku: string; // Identificador único por modelo/talla
+  release_date?: string;
+  is_limited_edition?: boolean;
+  release_type?: 'standard' | 'restock' | 'limited'; // Tipo de lanzamiento
+  sizes_available?: Record<string, number>; // { "36": 5, "37": 3, ... }
+  tags?: string[]; // Array: ['hyped', 'upcoming', 'popular', 'new']
+  
   created_at: string;
   updated_at: string;
 }

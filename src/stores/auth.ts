@@ -53,7 +53,8 @@ export async function initializeAuth() {
 
 // Auth actions
 export async function login(email: string, password: string) {
-  authStore.set((state) => ({ ...state, isLoading: true, error: null }));
+  const current = authStore.get();
+  authStore.set({ ...current, isLoading: true, error: null });
 
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -72,13 +73,15 @@ export async function login(email: string, password: string) {
     return { success: true, user: data.user };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error logging in';
-    authStore.set((state) => ({ ...state, isLoading: false, error: message }));
+    const current = authStore.get();
+    authStore.set({ ...current, isLoading: false, error: message });
     return { success: false, error: message };
   }
 }
 
 export async function register(email: string, password: string, fullName: string) {
-  authStore.set((state) => ({ ...state, isLoading: true, error: null }));
+  const current = authStore.get();
+  authStore.set({ ...current, isLoading: true, error: null });
 
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -102,13 +105,15 @@ export async function register(email: string, password: string, fullName: string
     return { success: true, user: data.user };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error registering';
-    authStore.set((state) => ({ ...state, isLoading: false, error: message }));
+    const current = authStore.get();
+    authStore.set({ ...current, isLoading: false, error: message });
     return { success: false, error: message };
   }
 }
 
 export async function logout() {
-  authStore.set((state) => ({ ...state, isLoading: true, error: null }));
+  const current = authStore.get();
+  authStore.set({ ...current, isLoading: true, error: null });
 
   try {
     const { error } = await supabase.auth.signOut();
@@ -125,7 +130,8 @@ export async function logout() {
     return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error logging out';
-    authStore.set((state) => ({ ...state, isLoading: false, error: message }));
+    const current = authStore.get();
+    authStore.set({ ...current, isLoading: false, error: message });
     return { success: false, error: message };
   }
 }

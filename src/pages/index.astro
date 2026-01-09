@@ -8,10 +8,10 @@ import PublicLayout from '@layouts/PublicLayout.astro';
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-2xl">
         <h1 class="text-5xl md:text-6xl font-display font-bold mb-6 leading-tight">
-          Sofisticación Minimalista
+          Zapatos Premium Exclusivos
         </h1>
         <p class="text-xl text-neutral-300 mb-8 leading-relaxed">
-          Colección curada de moda masculina premium. Cada pieza diseñada para la elegancia discreta y el confort absoluto.
+          Colección curada de sneakers auténticos: Jordan, Adidas, Nike, Yeezy y más. Ediciones limitadas y modelos clásicos para el coleccionista exigente.
         </p>
         <a
           href="/productos"
@@ -27,23 +27,22 @@ import PublicLayout from '@layouts/PublicLayout.astro';
   <section class="py-16 md:py-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h2 class="text-4xl font-display font-bold text-brand-navy mb-12">
-        Categorías Principales
+        Categorías Premium
       </h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
         {[
-          { name: 'Camisas', slug: 'camisas', description: 'Camisas de calidad premium' },
-          { name: 'Pantalones', slug: 'pantalones', description: 'Pantalones con corte perfecto' },
-          { name: 'Trajes', slug: 'trajes', description: 'Trajes atemporales' },
+          { name: 'Basketball', slug: 'basketball', description: 'Jordan, Kyrie, LeBron y más', icon: '🏀' },
+          { name: 'Lifestyle', slug: 'lifestyle', description: 'Sneakers casuales para el día a día', icon: '👟' },
+          { name: 'Running', slug: 'running', description: 'Zapatillas para correr de alto rendimiento', icon: '⚡' },
+          { name: 'Colecciones Limitadas', slug: 'limited-editions', description: 'Ediciones exclusivas y colabs', icon: '✨' },
         ].map((cat) => (
           <a
             href={`/categoria/${cat.slug}`}
             class="group"
           >
-            <div class="aspect-square bg-neutral-300 mb-4 overflow-hidden">
-              <div class="w-full h-full flex items-center justify-center text-neutral-500">
-                Imagen de {cat.name}
-              </div>
+            <div class="aspect-square bg-neutral-300 mb-4 overflow-hidden flex items-center justify-center text-4xl">
+              {cat.icon}
             </div>
             <h3 class="text-2xl font-display font-bold text-brand-navy group-hover:text-brand-charcoal transition-colors">
               {cat.name}

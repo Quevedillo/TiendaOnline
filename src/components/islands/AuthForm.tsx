@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { login, register } from '@stores/auth';
+import React, { useState, useEffect } from 'react';
+import { login, register, getCurrentUser } from '@stores/auth';
 
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,6 +9,13 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const user = getCurrentUser();
+    setIsAuthenticated(!!user);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,9 +28,13 @@ export default function AuthForm() {
 
     if (result.success) {
       setSuccess('¡Inicio de sesión exitoso!');
+      setEmail('');
+      setPassword('');
+      setIsAuthenticated(true);
+      // Redirect to home page after login
       setTimeout(() => {
         window.location.href = '/';
-      }, 1500);
+      }, 1000);
     } else {
       setError(result.error || 'Error al iniciar sesión');
     }
@@ -45,10 +56,15 @@ export default function AuthForm() {
     setLoading(false);
 
     if (result.success) {
-      setSuccess('¡Registro exitoso! Verifica tu email para confirmación.');
+      setSuccess('¡Registro exitoso!');
+      setEmail('');
+      setPassword('');
+      setFullName('');
+      setIsAuthenticated(true);
+      // Redirect to home page after registration
       setTimeout(() => {
         window.location.href = '/';
-      }, 2000);
+      }, 1000);
     } else {
       setError(result.error || 'Error al registrarse');
     }

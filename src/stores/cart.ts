@@ -1,5 +1,5 @@
 import { atom } from 'nanostores';
-import type { CartItem, Product } from './supabase';
+import type { CartItem, Product } from '../lib/supabase'; // Update this path based on where supabase.ts is located
 
 export interface CartStore {
   items: CartItem[];

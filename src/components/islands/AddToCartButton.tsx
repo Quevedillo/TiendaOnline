@@ -13,7 +13,8 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
   const [feedback, setFeedback] = useState<string>('');
   const [user, setUser] = useState(getCurrentUser());
 
-  const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  // Tallas numéricas para zapatos (EU)
+  const sizes = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'];
 
   useEffect(() => {
     const unsubscribe = authStore.subscribe((state) => {

@@ -3,7 +3,10 @@ import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  output: 'static', // SSG - static generation
+  // En Astro 5.0, 'static' es el modo por defecto
+  // Las rutas SSR se marcan individualmente con export const prerender = false
+  // Rutas SSG (prerender = true): /, /productos, /categoria/[slug], etc.
+  // Rutas SSR (prerender = false): /admin, /carrito, /pedidos
   integrations: [
     react(),
     tailwind({

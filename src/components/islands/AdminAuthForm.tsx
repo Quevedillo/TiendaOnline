@@ -60,58 +60,58 @@ export default function AdminAuthForm() {
   };
 
   return (
-    <div class="min-h-screen bg-gradient-to-br from-brand-navy to-brand-charcoal flex items-center justify-center px-4">
-      <div class="w-full max-w-md">
-        <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-charcoal flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-xl overflow-hidden">
           {/* Header */}
-          <div class="bg-brand-navy px-6 py-8 text-center">
-            <h1 class="text-3xl font-display font-bold text-white mb-2">
+          <div className="bg-brand-navy px-6 py-8 text-center">
+            <h1 className="text-3xl font-display font-bold text-white mb-2">
               FashionMarket
             </h1>
-            <p class="text-brand-gold text-sm">Panel de Administración</p>
+            <p className="text-brand-gold text-sm">Panel de Administración</p>
           </div>
 
           {/* Content */}
-          <div class="px-6 py-8">
+          <div className="px-6 py-8">
             {/* Error Message */}
             {error && (
-              <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
                 {error}
               </div>
             )}
 
             {/* Success Message */}
             {success && (
-              <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded text-sm">
+              <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded text-sm">
                 {success}
               </div>
             )}
 
             {/* Form */}
-            <form onSubmit={handleLogin} class="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label class="block text-sm font-semibold text-brand-navy mb-2">
+                <label className="block text-sm font-semibold text-brand-navy mb-2">
                   Correo Electrónico
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  class="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy focus:ring-opacity-20"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy focus:ring-opacity-20"
                   placeholder="admin@fashionmarket.com"
                   required
                 />
               </div>
 
               <div>
-                <label class="block text-sm font-semibold text-brand-navy mb-2">
+                <label className="block text-sm font-semibold text-brand-navy mb-2">
                   Contraseña
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  class="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy focus:ring-opacity-20"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy focus:ring-opacity-20"
                   placeholder="••••••••"
                   required
                   minLength={6}
@@ -121,18 +121,18 @@ export default function AdminAuthForm() {
               <button
                 type="submit"
                 disabled={loading}
-                class="w-full py-3 bg-brand-navy text-white font-semibold rounded hover:bg-brand-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-brand-navy text-white font-semibold rounded hover:bg-brand-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Verificando...' : 'Acceder Panel Admin'}
               </button>
             </form>
 
             {/* Back to Login */}
-            <div class="mt-6 pt-6 border-t border-neutral-200 text-center">
-              <p class="text-sm text-neutral-600 mb-2">¿Eres cliente?</p>
+            <div className="mt-6 pt-6 border-t border-neutral-200 text-center">
+              <p className="text-sm text-neutral-600 mb-2">¿Eres cliente?</p>
               <a
                 href="/auth/login"
-                class="text-brand-navy font-semibold hover:text-brand-charcoal"
+                className="text-brand-navy font-semibold hover:text-brand-charcoal"
               >
                 Volver al login de cliente
               </a>
@@ -141,9 +141,9 @@ export default function AdminAuthForm() {
         </div>
 
         {/* Security Notice */}
-        <div class="mt-6 text-center text-white text-xs">
+        <div className="mt-6 text-center text-white text-xs">
           <p>🔒 Acceso restringido</p>
-          <p class="mt-1">Solo para administradores autorizados</p>
+          <p className="mt-1">Solo para administradores autorizados</p>
         </div>
       </div>
     </div>
