@@ -5,22 +5,88 @@
 -- Dashboard > SQL Editor > New Query
 -- ============================================================================
 
--- Crear tabla de pedidos
-CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  stripe_session_id TEXT UNIQUE,
-  stripe_payment_intent_id TEXT,
-  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'cancelled', 'refunded')),
-  shipping_name TEXT,
-  shipping_address JSONB,
-  shipping_phone TEXT,
-  billing_email TEXT,
-  items JSONB NOT NULL DEFAULT '[]'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Agregar columnas faltantes si la tabla ya existía
+DO $$ 
+BEGIN
+  -- Agregar total_amount si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'total_amount') THEN
+    ALTER TABLE orders ADD COLUMN total_amount DECIMAL(10,2) NOT NULL DEFAULT 0;
+    RAISE NOTICE 'Columna total_amount añadida';
+  END IF;
+
+  -- Agregar stripe_session_id si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'stripe_session_id') THEN
+    ALTER TABLE orders ADD COLUMN stripe_session_id TEXT UNIQUE;
+    RAISE NOTICE 'Columna stripe_session_id añadida';
+  END IF;
+
+  -- Agregar stripe_payment_intent_id si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'stripe_payment_intent_id') THEN
+    ALTER TABLE orders ADD COLUMN stripe_payment_intent_id TEXT;
+    RAISE NOTICE 'Columna stripe_payment_intent_id añadida';
+  END IF;
+
+  -- Agregar shipping_name si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'shipping_name') THEN
+    ALTER TABLE orders ADD COLUMN shipping_name TEXT;
+    RAISE NOTICE 'Columna shipping_name añadida';
+  END IF;
+
+  -- Agregar shipping_address si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'shipping_address') THEN
+    ALTER TABLE orders ADD COLUMN shipping_address JSONB;
+    RAISE NOTICE 'Columna shipping_address añadida';
+  END IF;
+
+  -- Agregar shipping_phone si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'shipping_phone') THEN
+    ALTER TABLE orders ADD COLUMN shipping_phone TEXT;
+    RAISE NOTICE 'Columna shipping_phone añadida';
+  END IF;
+
+  -- Agregar billing_email si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'billing_email') THEN
+    ALTER TABLE orders ADD COLUMN billing_email TEXT;
+    RAISE NOTICE 'Columna billing_email añadida';
+  END IF;
+
+  -- Agregar items si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'items') THEN
+    ALTER TABLE orders ADD COLUMN items JSONB NOT NULL DEFAULT '[]'::jsonb;
+    RAISE NOTICE 'Columna items añadida';
+  END IF;
+
+  -- Agregar status si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'status') THEN
+    ALTER TABLE orders ADD COLUMN status TEXT DEFAULT 'pending';
+    RAISE NOTICE 'Columna status añadida';
+  END IF;
+
+  -- Agregar created_at si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'created_at') THEN
+    ALTER TABLE orders ADD COLUMN created_at TIMESTAMPTZ DEFAULT NOW();
+    RAISE NOTICE 'Columna created_at añadida';
+  END IF;
+
+  -- Agregar updated_at si no existe
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                 WHERE table_name = 'orders' AND column_name = 'updated_at') THEN
+    ALTER TABLE orders ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+    RAISE NOTICE 'Columna updated_at añadida';
+  END IF;
+
+  RAISE NOTICE 'Actualización de tabla completada';
+END $$;
 
 -- Índices para búsquedas rápidas
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);

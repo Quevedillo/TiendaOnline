@@ -31,6 +31,7 @@ export default function CartSlideOver() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important: include cookies
         body: JSON.stringify({
           items: cart.items,
         }),

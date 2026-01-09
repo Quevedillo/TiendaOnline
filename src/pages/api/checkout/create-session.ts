@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
 import { stripe } from '@lib/stripe';
-import { supabase } from '@lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const body = await request.json();
     const { items } = body;
@@ -14,11 +14,31 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Get current user session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    // Get tokens from cookies
+    const accessToken = cookies.get('sb-access-token')?.value;
+    const refreshToken = cookies.get('sb-refresh-token')?.value;
+
+    if (!accessToken || !refreshToken) {
       return new Response(
         JSON.stringify({ error: 'Debe estar autenticado para hacer checkout' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create Supabase client and set session
+    const supabase = createClient(
+      import.meta.env.PUBLIC_SUPABASE_URL,
+      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (sessionError || !session) {
+      return new Response(
+        JSON.stringify({ error: 'Sesión inválida. Por favor inicie sesión nuevamente.' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -52,6 +72,28 @@ export const POST: APIRoute = async ({ request }) => {
     // Get the origin from the request
     const origin = request.headers.get('origin') || 'http://localhost:4322';
 
+    // Create minimal cart items for metadata (Stripe has 500 char limit per value)
+    const minimalCartItems = items.map((item: {
+      product_id: string;
+      product: {
+        id: string;
+        name: string;
+        price: number;
+        brand?: string;
+        images?: string[];
+      };
+      quantity: number;
+      size: string;
+    }) => ({
+      id: item.product_id || item.product.id,
+      name: item.product.name,
+      brand: item.product.brand || '',
+      price: item.product.price,
+      qty: item.quantity,
+      size: item.size,
+      img: item.product.images?.[0] || '',
+    }));
+
     // Create Stripe Checkout Session with user metadata
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -69,7 +111,7 @@ export const POST: APIRoute = async ({ request }) => {
         items_count: items.length.toString(),
         user_id: userId,
         user_email: userEmail,
-        cart_items: JSON.stringify(items),
+        cart_items: JSON.stringify(minimalCartItems),
       },
     });
 

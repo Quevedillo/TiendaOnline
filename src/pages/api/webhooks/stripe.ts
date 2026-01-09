@@ -53,10 +53,10 @@ export const POST: APIRoute = async ({ request }) => {
             user_id: userId,
             stripe_session_id: session.id,
             stripe_payment_intent_id: session.payment_intent,
-            total_amount: total / 100, // Convert cents to dollars
+            total_price: total / 100, // Convert cents to dollars
             status: 'completed',
-            shipping_name: session.shipping_details?.name || null,
-            shipping_address: session.shipping_details?.address || null,
+            shipping_name: (session as any).shipping?.name || null,
+            shipping_address: JSON.stringify((session as any).shipping?.address) || null,
             shipping_phone: session.customer_details?.phone || null,
             billing_email: session.customer_email || null,
             items: cartItems,
@@ -87,7 +87,7 @@ export const POST: APIRoute = async ({ request }) => {
             user_id: userId,
             stripe_payment_intent_id: paymentIntent.id,
             status: 'failed',
-            total_amount: (paymentIntent.amount || 0) / 100,
+            total_price: (paymentIntent.amount || 0) / 100,
             items: JSON.parse(paymentIntent.metadata.cart_items || '[]'),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),

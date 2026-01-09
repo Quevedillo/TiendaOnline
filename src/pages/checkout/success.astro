@@ -56,7 +56,7 @@ if (sessionId) {
             stripe_payment_intent_id: typeof stripeSession.payment_intent === 'string' 
               ? stripeSession.payment_intent 
               : null,
-            total_amount: (stripeSession.amount_total || 0) / 100, // Convert cents to dollars
+            total_price: (stripeSession.amount_total || 0) / 100, // Convert cents to dollars
             status: 'completed',
             shipping_name: shippingDetails?.name || customerDetails?.name || null,
             shipping_address: shippingDetails?.address || null,
