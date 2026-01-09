@@ -52,29 +52,29 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Authentication Warning */}
       {!user && (
-        <div className="p-3 bg-blue-100 border border-blue-400 text-blue-700 text-sm rounded">
-          ℹ️ Necesitas iniciar sesión para agregar al carrito. <a href="/auth/login" className="font-semibold underline">Hacerlo ahora</a>
+        <div className="p-4 bg-brand-gray border border-brand-red/30 text-neutral-300 text-sm">
+          ⚡ Necesitas iniciar sesión para agregar al carrito. <a href="/auth/login" className="font-bold text-brand-red hover:text-brand-orange underline">Hacerlo ahora</a>
         </div>
       )}
 
       {/* Size Selection */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">
-          Talla
+        <label className="block text-sm font-bold text-white uppercase tracking-wider mb-3">
+          Selecciona tu talla (EU)
         </label>
         <div className="grid grid-cols-6 gap-2">
           {sizes.map((size) => (
             <button
               key={size}
               onClick={() => setSelectedSize(size)}
-              className={`py-2 px-3 text-sm font-medium border-2 transition-colors ${
+              className={`py-3 px-2 text-sm font-bold transition-all ${
                 selectedSize === size
-                  ? 'border-brand-navy bg-brand-navy text-white'
-                  : 'border-neutral-300 bg-white text-gray-900 hover:border-brand-navy'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  ? 'bg-brand-red text-white'
+                  : 'bg-brand-gray text-white hover:bg-brand-red/20 hover:text-brand-red'
+              } disabled:opacity-30 disabled:cursor-not-allowed`}
               disabled={product.stock <= 0 || !user}
             >
               {size}
@@ -85,13 +85,13 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
 
       {/* Quantity */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">
+        <label className="block text-sm font-bold text-white uppercase tracking-wider mb-3">
           Cantidad
         </label>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="px-3 py-2 border border-neutral-300 text-gray-900 hover:bg-neutral-50"
+            className="w-12 h-12 bg-brand-gray text-white font-bold hover:bg-brand-red transition-colors"
             disabled={!user}
           >
             −
@@ -104,12 +104,12 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
             onChange={(e) =>
               setQuantity(Math.max(1, Math.min(product.stock, parseInt(e.target.value) || 1)))
             }
-            className="w-16 text-center border border-neutral-300 py-2"
+            className="w-20 h-12 text-center bg-brand-gray text-white font-bold border-0 focus:ring-2 focus:ring-brand-red"
             disabled={!user}
           />
           <button
             onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-            className="px-3 py-2 border border-neutral-300 text-gray-900 hover:bg-neutral-50"
+            className="w-12 h-12 bg-brand-gray text-white font-bold hover:bg-brand-red transition-colors"
             disabled={!user}
           >
             +
@@ -121,28 +121,21 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
       <button
         onClick={handleAddToCart}
         disabled={product.stock <= 0}
-        className={`w-full py-3 px-4 font-semibold transition-colors ${
+        className={`w-full py-4 px-6 font-bold uppercase text-lg tracking-wider transition-all ${
           product.stock > 0
-            ? 'bg-brand-navy text-white hover:bg-brand-charcoal cursor-pointer'
-            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            ? 'bg-brand-red text-white hover:bg-brand-orange cursor-pointer hover:scale-[1.02]'
+            : 'bg-brand-gray text-neutral-500 cursor-not-allowed'
         }`}
       >
-        {product.stock > 0 ? 'Añadir al Carrito' : 'Agotado'}
+        {product.stock > 0 ? '🛒 Añadir al Carrito' : 'Agotado'}
       </button>
 
       {/* Feedback Message */}
       {feedback && (
-        <p className={`text-center text-sm ${feedback.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>
+        <p className={`text-center font-bold ${feedback.startsWith('✓') ? 'text-green-500' : 'text-brand-red'}`}>
           {feedback}
         </p>
       )}
-
-      {/* Stock Info */}
-      <p className="text-xs text-neutral-600">
-        {product.stock > 0
-          ? `${product.stock} en stock`
-          : 'No disponible'}
-      </p>
     </div>
   );
 }

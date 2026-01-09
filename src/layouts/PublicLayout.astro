@@ -13,25 +13,34 @@ const { title, description } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
-  {/* Header */}
-  <header class="sticky top-0 z-30 bg-white border-b border-neutral-200 shadow-sm">
+  {/* Header - Estilo Sneaker Store */}
+  <header class="sticky top-0 z-30 bg-brand-black border-b border-brand-gray">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         {/* Logo */}
-        <a href="/" class="text-2xl font-display font-bold text-brand-navy hover:text-brand-charcoal transition-colors">
-          FashionMarket
+        <a href="/" class="flex items-center gap-2">
+          <span class="text-2xl">👟</span>
+          <span class="text-xl font-display font-bold text-white tracking-wider uppercase">
+            KICKS<span class="text-brand-red">PREMIUM</span>
+          </span>
         </a>
 
         {/* Navigation */}
         <nav class="hidden md:flex items-center gap-8">
-          <a href="/" class="text-sm font-medium text-neutral-700 hover:text-brand-navy transition-colors">
+          <a href="/" class="text-sm font-bold text-white/80 hover:text-brand-red transition-colors uppercase tracking-wide">
             Inicio
           </a>
-          <a href="/productos" class="text-sm font-medium text-neutral-700 hover:text-brand-navy transition-colors">
+          <a href="/productos" class="text-sm font-bold text-white/80 hover:text-brand-red transition-colors uppercase tracking-wide">
             Catálogo
           </a>
-          <a href="/categoria/camisas" class="text-sm font-medium text-neutral-700 hover:text-brand-navy transition-colors">
-            Categorías
+          <a href="/categoria/basketball" class="text-sm font-bold text-white/80 hover:text-brand-red transition-colors uppercase tracking-wide">
+            Basketball
+          </a>
+          <a href="/categoria/lifestyle" class="text-sm font-bold text-white/80 hover:text-brand-red transition-colors uppercase tracking-wide">
+            Lifestyle
+          </a>
+          <a href="/categoria/limited-editions" class="text-sm font-bold text-brand-red hover:text-brand-orange transition-colors uppercase tracking-wide">
+            🔥 Drops
           </a>
         </nav>
 
@@ -43,66 +52,84 @@ const { title, description } = Astro.props;
       </div>
     </div>
   </header>
-      </div>
-    </div>
-  </header>
 
   {/* Main Content */}
-  <main class="min-h-screen">
+  <main class="min-h-screen bg-brand-dark">
     <slot />
   </main>
 
-  {/* Footer */}
-  <footer class="bg-brand-navy text-white mt-16">
+  {/* Footer - Estilo Sneaker */}
+  <footer class="bg-brand-black text-white border-t border-brand-gray">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         {/* Brand */}
         <div>
-          <h3 class="text-lg font-display font-bold mb-4">FashionMarket</h3>
-          <p class="text-neutral-300 text-sm">
-            Premium men's fashion, meticulously curated.
+          <h3 class="text-xl font-display font-bold mb-4 uppercase tracking-wider">
+            KICKS<span class="text-brand-red">PREMIUM</span>
+          </h3>
+          <p class="text-neutral-400 text-sm">
+            Tu destino para sneakers auténticos. Jordan, Nike, Adidas, Yeezy y más.
           </p>
+          <div class="flex gap-4 mt-4">
+            <a href="#" class="text-2xl hover:text-brand-red transition-colors">📸</a>
+            <a href="#" class="text-2xl hover:text-brand-red transition-colors">🐦</a>
+            <a href="#" class="text-2xl hover:text-brand-red transition-colors">📱</a>
+          </div>
         </div>
 
         {/* Links */}
         <div>
-          <h4 class="font-semibold mb-4">Tienda</h4>
-          <ul class="space-y-2 text-sm text-neutral-300">
-            <li><a href="/productos" class="hover:text-white transition-colors">Todos los productos</a></li>
-            <li><a href="/categoria/camisas" class="hover:text-white transition-colors">Camisas</a></li>
-            <li><a href="/categoria/pantalones" class="hover:text-white transition-colors">Pantalones</a></li>
-            <li><a href="/categoria/trajes" class="hover:text-white transition-colors">Trajes</a></li>
+          <h4 class="font-bold mb-4 uppercase tracking-wide text-brand-red">Tienda</h4>
+          <ul class="space-y-2 text-sm text-neutral-400">
+            <li><a href="/productos" class="hover:text-white transition-colors">Todos los Kicks</a></li>
+            <li><a href="/categoria/basketball" class="hover:text-white transition-colors">Basketball</a></li>
+            <li><a href="/categoria/lifestyle" class="hover:text-white transition-colors">Lifestyle</a></li>
+            <li><a href="/categoria/running" class="hover:text-white transition-colors">Running</a></li>
+            <li><a href="/categoria/limited-editions" class="hover:text-white transition-colors">🔥 Drops Limitados</a></li>
           </ul>
         </div>
 
         {/* Support */}
         <div>
-          <h4 class="font-semibold mb-4">Soporte</h4>
-          <ul class="space-y-2 text-sm text-neutral-300">
-            <li><a href="#" class="hover:text-white transition-colors">Contacto</a></li>
+          <h4 class="font-bold mb-4 uppercase tracking-wide text-brand-red">Ayuda</h4>
+          <ul class="space-y-2 text-sm text-neutral-400">
+            <li><a href="#" class="hover:text-white transition-colors">Guía de Tallas</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Autenticidad</a></li>
             <li><a href="#" class="hover:text-white transition-colors">Envíos</a></li>
             <li><a href="#" class="hover:text-white transition-colors">Devoluciones</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">Política de privacidad</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
           </ul>
         </div>
 
-        {/* Legal */}
+        {/* Newsletter */}
         <div>
-          <h4 class="font-semibold mb-4">Empresa</h4>
-          <ul class="space-y-2 text-sm text-neutral-300">
-            <li><a href="#" class="hover:text-white transition-colors">Sobre nosotros</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">Sostenibilidad</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
-            <li><a href="#" class="hover:text-white transition-colors">Carrera profesional</a></li>
-          </ul>
+          <h4 class="font-bold mb-4 uppercase tracking-wide text-brand-red">Drops Alert</h4>
+          <p class="text-neutral-400 text-sm mb-4">
+            Sé el primero en enterarte de los nuevos lanzamientos.
+          </p>
+          <div class="flex">
+            <input 
+              type="email" 
+              placeholder="tu@email.com" 
+              class="bg-brand-gray border border-brand-gray text-white px-4 py-2 text-sm flex-1 focus:outline-none focus:border-brand-red"
+            />
+            <button class="bg-brand-red text-white px-4 py-2 text-sm font-bold uppercase hover:bg-brand-orange transition-colors">
+              →
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Divider */}
-      <div class="border-t border-neutral-700 pt-8">
-        <p class="text-center text-neutral-300 text-sm">
-          © 2026 FashionMarket. Todos los derechos reservados.
+      <div class="border-t border-brand-gray pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-neutral-500 text-sm">
+          © 2026 KicksPremium. Todos los derechos reservados.
         </p>
+        <div class="flex gap-4 text-sm text-neutral-500">
+          <span>✓ 100% Auténtico</span>
+          <span>✓ Envío Express</span>
+          <span>✓ Garantía</span>
+        </div>
       </div>
     </div>
   </footer>

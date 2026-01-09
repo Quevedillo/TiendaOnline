@@ -71,32 +71,32 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-navy to-brand-charcoal flex items-center justify-center px-4">
+    <div className="min-h-screen bg-brand-black flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Card */}
-        <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+        <div className="bg-brand-dark overflow-hidden">
           {/* Header */}
-          <div className="bg-brand-navy px-6 py-8 text-center">
-            <h1 className="text-3xl font-display font-bold text-white mb-2">
-              FashionMarket
+          <div className="bg-brand-gray px-6 py-10 text-center border-b-4 border-brand-red">
+            <h1 className="text-4xl font-display font-bold text-white uppercase tracking-tight mb-2">
+              KICKS<span className="text-brand-red">PREMIUM</span>
             </h1>
-            <p className="text-brand-gold text-sm">Moda Masculina Premium</p>
+            <p className="text-neutral-400 text-sm uppercase tracking-wider">Sneakers Auténticos</p>
           </div>
 
           {/* Content */}
           <div className="px-6 py-8">
             {/* Tabs */}
-            <div className="flex gap-4 mb-6">
+            <div className="flex gap-2 mb-8">
               <button
                 onClick={() => {
                   setIsLogin(true);
                   setError('');
                   setSuccess('');
                 }}
-                className={`flex-1 py-2 px-4 rounded font-semibold transition-colors ${
+                className={`flex-1 py-3 px-4 font-bold uppercase text-sm tracking-wider transition-all ${
                   isLogin
-                    ? 'bg-brand-navy text-white'
-                    : 'bg-neutral-200 text-brand-navy hover:bg-neutral-300'
+                    ? 'bg-brand-red text-white'
+                    : 'bg-brand-gray text-neutral-400 hover:text-white'
                 }`}
               >
                 Iniciar Sesión
@@ -107,10 +107,10 @@ export default function AuthForm() {
                   setError('');
                   setSuccess('');
                 }}
-                className={`flex-1 py-2 px-4 rounded font-semibold transition-colors ${
+                className={`flex-1 py-3 px-4 font-bold uppercase text-sm tracking-wider transition-all ${
                   !isLogin
-                    ? 'bg-brand-navy text-white'
-                    : 'bg-neutral-200 text-brand-navy hover:bg-neutral-300'
+                    ? 'bg-brand-red text-white'
+                    : 'bg-brand-gray text-neutral-400 hover:text-white'
                 }`}
               >
                 Registrarse
@@ -119,31 +119,31 @@ export default function AuthForm() {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+              <div className="mb-4 p-4 bg-red-900/30 border border-red-500 text-red-400 text-sm">
                 {error}
               </div>
             )}
 
             {/* Success Message */}
             {success && (
-              <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded text-sm">
+              <div className="mb-4 p-4 bg-green-900/30 border border-green-500 text-green-400 text-sm">
                 {success}
               </div>
             )}
 
             {/* Forms */}
-            <form onSubmit={isLogin ? handleLogin : handleRegister} className="space-y-4">
+            <form onSubmit={isLogin ? handleLogin : handleRegister} className="space-y-5">
               {/* Full Name (Register only) */}
               {!isLogin && (
                 <div>
-                  <label className="block text-sm font-semibold text-brand-navy mb-2">
+                  <label className="block text-sm font-bold text-white uppercase tracking-wider mb-2">
                     Nombre Completo
                   </label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy focus:ring-opacity-20"
+                    className="w-full px-4 py-3 bg-brand-gray text-white border-0 focus:outline-none focus:ring-2 focus:ring-brand-red placeholder-neutral-500"
                     placeholder="Juan Pérez"
                     required
                   />
@@ -152,14 +152,14 @@ export default function AuthForm() {
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-semibold text-brand-navy mb-2">
+                <label className="block text-sm font-bold text-white uppercase tracking-wider mb-2">
                   Correo Electrónico
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy focus:ring-opacity-20"
+                  className="w-full px-4 py-3 bg-brand-gray text-white border-0 focus:outline-none focus:ring-2 focus:ring-brand-red placeholder-neutral-500"
                   placeholder="tu@email.com"
                   required
                 />
@@ -167,14 +167,14 @@ export default function AuthForm() {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-semibold text-brand-navy mb-2">
+                <label className="block text-sm font-bold text-white uppercase tracking-wider mb-2">
                   Contraseña
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-neutral-300 rounded focus:outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy focus:ring-opacity-20"
+                  className="w-full px-4 py-3 bg-brand-gray text-white border-0 focus:outline-none focus:ring-2 focus:ring-brand-red placeholder-neutral-500"
                   placeholder="••••••••"
                   required
                   minLength={6}
@@ -185,27 +185,31 @@ export default function AuthForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-brand-navy text-white font-semibold rounded hover:bg-brand-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 bg-brand-red text-white font-bold uppercase tracking-wider hover:bg-brand-orange transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
               >
                 {loading
                   ? 'Procesando...'
                   : isLogin
-                    ? 'Iniciar Sesión'
-                    : 'Crear Cuenta'}
+                    ? '🔓 Iniciar Sesión'
+                    : '✨ Crear Cuenta'}
               </button>
             </form>
           </div>
         </div>
 
         {/* Footer Info */}
-        <div className="mt-6 text-center text-white text-sm">
-          <p>Acceso a tu cuenta de cliente</p>
-          <p className="mt-2 text-brand-gold">
-            ✓ Ver productos sin cuenta
-          </p>
-          <p className="text-brand-gold">
-            ✓ Necesaria para comprar
-          </p>
+        <div className="mt-8 text-center">
+          <a href="/" className="text-brand-red hover:text-brand-orange font-bold uppercase text-sm">
+            ← Volver a la tienda
+          </a>
+          <div className="mt-6 space-y-2">
+            <p className="text-neutral-500 text-sm">
+              ✓ Acceso exclusivo a drops limitados
+            </p>
+            <p className="text-neutral-500 text-sm">
+              ✓ Historial de pedidos y favoritos
+            </p>
+          </div>
         </div>
       </div>
     </div>

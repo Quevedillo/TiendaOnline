@@ -7,10 +7,10 @@ import type { Product } from '@lib/supabase';
 
 const { slug } = Astro.params;
 
-// Fetch product by slug (SSG with dynamic routes)
+// Fetch product by slug
 const { data: product, error } = await supabase
   .from('products')
-  .select('*, categories(name)')
+  .select('*, categories(name, slug)')
   .eq('slug', slug)
   .single();
 
@@ -19,41 +19,43 @@ if (error || !product) {
 }
 
 const formatPrice = (cents: number) => {
-  return `$${(cents / 100).toFixed(2)}`;
+  return `$${(cents / 100).toFixed(0)}`;
 };
 
-// Generate static paths
-export async function getStaticPaths() {
-  const { data: products } = await supabase
-    .from('products')
-    .select('slug');
-
-  return (products || []).map((p) => ({
-    params: { slug: p.slug },
-  }));
-}
+// Fetch related products
+const { data: relatedProducts } = await supabase
+  .from('products')
+  .select('*')
+  .eq('category_id', product.category_id)
+  .neq('id', product.id)
+  .limit(4);
 ---
 
-<PublicLayout title={product.name} description={product.description}>
+<PublicLayout title={`${product.name} - KicksPremium`} description={product.description}>
   {/* Breadcrumb */}
-  <div class="bg-white border-b border-neutral-200">
+  <div class="bg-brand-black border-b border-brand-gray">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex items-center gap-2 text-sm text-neutral-600">
-        <a href="/" class="hover:text-brand-navy">Inicio</a>
+      <div class="flex items-center gap-2 text-sm text-neutral-500">
+        <a href="/" class="hover:text-brand-red transition-colors">Inicio</a>
         <span>/</span>
-        <a href="/productos" class="hover:text-brand-navy">Catálogo</a>
+        <a href="/productos" class="hover:text-brand-red transition-colors">Catálogo</a>
         <span>/</span>
-        <span class="text-neutral-900">{product.name}</span>
+        <span class="text-white">{product.name}</span>
       </div>
     </div>
   </div>
 
   {/* Product Detail */}
-  <section class="py-12 md:py-16">
+  <section class="py-12 bg-brand-dark">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Gallery */}
-        <div>
+        <div class="bg-brand-gray p-4 relative">
+          {product.is_limited_edition && (
+            <div class="absolute top-6 left-6 bg-brand-red text-white text-sm font-bold px-3 py-1 z-10 uppercase">
+              🔥 Limited Edition
+            </div>
+          )}
           <ProductGallery
             images={product.images || []}
             productName={product.name}
@@ -62,53 +64,92 @@ export async function getStaticPaths() {
 
         {/* Product Info */}
         <div class="space-y-6">
-          {/* Category */}
-          <div>
-            <a
-              href={`/categoria/${product.category_id}`}
-              class="inline-block text-sm font-medium text-brand-gold hover:text-brand-navy transition-colors"
-            >
-              {product.categories?.name || 'Sin categoría'}
-            </a>
+          {/* Brand & Category */}
+          <div class="flex items-center gap-3">
+            <span class="text-brand-red font-bold uppercase text-sm tracking-wider">
+              {product.brand}
+            </span>
+            {product.categories?.slug && (
+              <>
+                <span class="text-neutral-600">•</span>
+                <a
+                  href={`/categoria/${product.categories.slug}`}
+                  class="text-neutral-500 hover:text-brand-red transition-colors text-sm uppercase"
+                >
+                  {product.categories?.name || 'Sin categoría'}
+                </a>
+              </>
+            )}
           </div>
 
           {/* Title */}
           <div>
-            <h1 class="text-4xl font-display font-bold text-brand-navy mb-2">
+            <h1 class="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight mb-4">
               {product.name}
             </h1>
-            <p class="text-xl font-bold text-brand-charcoal">
-              {formatPrice(product.price)}
-            </p>
+            <div class="flex items-center gap-4">
+              <span class="text-3xl font-bold text-white">
+                {formatPrice(product.price)}
+              </span>
+              {product.original_price && product.original_price > product.price && (
+                <>
+                  <span class="text-xl text-neutral-500 line-through">
+                    {formatPrice(product.original_price)}
+                  </span>
+                  <span class="bg-brand-red text-white text-sm font-bold px-2 py-1">
+                    -{Math.round((1 - product.price / product.original_price) * 100)}%
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Stock Status */}
+          <div class="flex items-center gap-2">
+            {product.stock > 10 ? (
+              <span class="text-green-500 text-sm font-bold">✓ En stock</span>
+            ) : product.stock > 0 ? (
+              <span class="text-brand-orange text-sm font-bold">⚠ Solo {product.stock} disponibles</span>
+            ) : (
+              <span class="text-red-500 text-sm font-bold">✗ Agotado</span>
+            )}
           </div>
 
           {/* Description */}
-          <div class="prose prose-sm max-w-none">
-            <p class="text-neutral-700 leading-relaxed">
+          <div class="border-t border-brand-gray pt-6">
+            <p class="text-neutral-400 leading-relaxed">
               {product.description}
             </p>
           </div>
 
           {/* Add to Cart Component (Island) */}
-          <AddToCartButton product={product} client:load />
+          <div class="pt-4">
+            <AddToCartButton product={product} client:load />
+          </div>
 
           {/* Additional Info */}
-          <div class="border-t border-neutral-200 pt-6 space-y-4">
-            <div>
-              <h3 class="font-semibold text-neutral-900 mb-2">Detalles</h3>
-              <ul class="space-y-1 text-sm text-neutral-600">
-                <li>✓ Material premium de alta calidad</li>
-                <li>✓ Diseño atemporalen</li>
-                <li>✓ Confort superior</li>
-                <li>✓ Sostenible y ético</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 class="font-semibold text-neutral-900 mb-2">Envío y Devoluciones</h3>
-              <p class="text-sm text-neutral-600">
-                Envío gratis en pedidos superiores a $100. Devoluciones gratuitas dentro de 30 días.
-              </p>
+          <div class="border-t border-brand-gray pt-6 space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-brand-gray p-4">
+                <div class="text-brand-red text-xl mb-2">🚚</div>
+                <h4 class="text-white font-bold text-sm">Envío Express</h4>
+                <p class="text-neutral-500 text-xs mt-1">24-48h en Península</p>
+              </div>
+              <div class="bg-brand-gray p-4">
+                <div class="text-brand-red text-xl mb-2">✓</div>
+                <h4 class="text-white font-bold text-sm">100% Auténtico</h4>
+                <p class="text-neutral-500 text-xs mt-1">Garantía de autenticidad</p>
+              </div>
+              <div class="bg-brand-gray p-4">
+                <div class="text-brand-red text-xl mb-2">↩️</div>
+                <h4 class="text-white font-bold text-sm">Devolución Gratis</h4>
+                <p class="text-neutral-500 text-xs mt-1">30 días sin preguntas</p>
+              </div>
+              <div class="bg-brand-gray p-4">
+                <div class="text-brand-red text-xl mb-2">🔒</div>
+                <h4 class="text-white font-bold text-sm">Pago Seguro</h4>
+                <p class="text-neutral-500 text-xs mt-1">SSL + 3D Secure</p>
+              </div>
             </div>
           </div>
         </div>
@@ -117,20 +158,41 @@ export async function getStaticPaths() {
   </section>
 
   {/* Related Products */}
-  <section class="py-12 md:py-16 bg-neutral-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="text-3xl font-display font-bold text-brand-navy mb-8">
-        Productos Relacionados
-      </h2>
-      <p class="text-neutral-600">
-        Ver más productos de la categoría
-        <a
-          href={`/categoria/${product.category_id}`}
-          class="text-brand-navy hover:text-brand-charcoal font-semibold ml-1"
-        >
-          {product.categories?.name}
-        </a>
-      </p>
-    </div>
-  </section>
+  {relatedProducts && relatedProducts.length > 0 && (
+    <section class="py-12 bg-brand-black">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+          <h2 class="text-2xl font-display font-bold text-white uppercase">
+            También te puede gustar
+          </h2>
+          <a
+            href={`/categoria/${product.categories?.slug}`}
+            class="text-brand-red hover:text-brand-orange font-bold text-sm uppercase"
+          >
+            Ver más →
+          </a>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {relatedProducts.map((related) => (
+            <a href={`/productos/${related.slug}`} class="group bg-brand-gray overflow-hidden hover:scale-[1.02] transition-all">
+              <div class="aspect-square bg-brand-dark relative overflow-hidden">
+                <img 
+                  src={related.images?.[0] || 'https://via.placeholder.com/400x400?text=Sneaker'}
+                  alt={related.name}
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+              </div>
+              <div class="p-3">
+                <div class="text-brand-red text-xs font-bold uppercase">{related.brand}</div>
+                <h3 class="text-white text-sm font-bold group-hover:text-brand-red transition-colors line-clamp-1">
+                  {related.name}
+                </h3>
+                <span class="text-white font-bold">${(related.price / 100).toFixed(0)}</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
 </PublicLayout>

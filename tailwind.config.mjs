@@ -4,13 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Custom brand palette
+        // Sneaker store palette - Urban/Street style
         brand: {
-          navy: '#001F3F',
-          charcoal: '#2C3E50',
-          cream: '#F9F8F6',
-          gold: '#D4AF6C',
-          accent: '#1B4965',
+          black: '#0A0A0A',
+          dark: '#141414',
+          gray: '#1C1C1C',
+          red: '#FF3131',
+          orange: '#FF6B35',
+          cream: '#F5F5F5',
+          gold: '#FFD700',
+          accent: '#00D4FF',
         },
         neutral: {
           50: '#FAFAFA',
@@ -26,8 +29,9 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Playfair Display', 'ui-serif', 'Georgia', 'serif'],
+        display: ['Oswald', 'Impact', 'ui-sans-serif', 'sans-serif'],
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        heading: ['Bebas Neue', 'Impact', 'sans-serif'],
         mono: ['Fira Code', 'monospace'],
       },
       spacing: {

@@ -1,55 +1,168 @@
 ---
 import PublicLayout from '@layouts/PublicLayout.astro';
+import { supabase } from '@lib/supabase';
+
+// Fetch productos y categorías
+const { data: products } = await supabase
+  .from('products')
+  .select('*')
+  .order('created_at', { ascending: false })
+  .limit(6);
+
+const { data: categories } = await supabase
+  .from('categories')
+  .select('*')
+  .order('display_order');
 ---
 
-<PublicLayout title="FashionMarket - Premium Men's Fashion" description="Discover our curated collection of premium men's fashion">
-  {/* Hero Section */}
-  <section class="bg-brand-navy text-white py-20 md:py-32">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-2xl">
-        <h1 class="text-5xl md:text-6xl font-display font-bold mb-6 leading-tight">
-          Zapatos Premium Exclusivos
-        </h1>
-        <p class="text-xl text-neutral-300 mb-8 leading-relaxed">
-          Colección curada de sneakers auténticos: Jordan, Adidas, Nike, Yeezy y más. Ediciones limitadas y modelos clásicos para el coleccionista exigente.
-        </p>
-        <a
-          href="/productos"
-          class="inline-block bg-white text-brand-navy px-8 py-4 font-semibold hover:bg-neutral-100 transition-colors"
-        >
-          Explorar Catálogo
-        </a>
+<PublicLayout title="KicksPremium - Sneakers Auténticos" description="Tu destino para sneakers premium auténticos">
+  {/* Hero Section - Full Impact */}
+  <section class="relative bg-brand-black text-white overflow-hidden">
+    {/* Background Pattern */}
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute inset-0" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px);"></div>
+    </div>
+    
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="inline-block bg-brand-red text-white text-xs font-bold px-3 py-1 mb-6 uppercase tracking-wider">
+            🔥 New Drops Available
+          </div>
+          <h1 class="text-5xl md:text-7xl font-display font-bold mb-6 leading-none uppercase tracking-tight">
+            SNEAKERS<br/>
+            <span class="text-brand-red">PREMIUM</span><br/>
+            AUTÉNTICOS
+          </h1>
+          <p class="text-xl text-neutral-400 mb-8 leading-relaxed">
+            Jordan • Nike • Adidas • Yeezy • New Balance
+          </p>
+          <div class="flex flex-wrap gap-4">
+            <a
+              href="/productos"
+              class="inline-block bg-brand-red text-white px-8 py-4 font-bold uppercase tracking-wide hover:bg-brand-orange transition-all hover:scale-105"
+            >
+              Ver Catálogo
+            </a>
+            <a
+              href="/categoria/limited-editions"
+              class="inline-block border-2 border-white text-white px-8 py-4 font-bold uppercase tracking-wide hover:bg-white hover:text-brand-black transition-all"
+            >
+              🔥 Drops Limitados
+            </a>
+          </div>
+        </div>
+        <div class="hidden md:block relative">
+          <div class="text-[200px] leading-none opacity-10 font-display font-bold absolute -right-20 top-1/2 -translate-y-1/2">
+            👟
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  {/* Featured Categories */}
-  <section class="py-16 md:py-24">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="text-4xl font-display font-bold text-brand-navy mb-12">
-        Categorías Premium
-      </h2>
+  {/* Brands Bar */}
+  <section class="bg-brand-gray py-6 border-y border-brand-black">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex justify-center items-center gap-8 md:gap-16 text-neutral-500 font-bold uppercase tracking-widest text-sm">
+        <span class="hover:text-white transition-colors cursor-pointer">Jordan</span>
+        <span class="hover:text-white transition-colors cursor-pointer">Nike</span>
+        <span class="hover:text-white transition-colors cursor-pointer">Adidas</span>
+        <span class="hover:text-white transition-colors cursor-pointer">Yeezy</span>
+        <span class="hover:text-white transition-colors cursor-pointer">New Balance</span>
+      </div>
+    </div>
+  </section>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {[
-          { name: 'Basketball', slug: 'basketball', description: 'Jordan, Kyrie, LeBron y más', icon: '🏀' },
-          { name: 'Lifestyle', slug: 'lifestyle', description: 'Sneakers casuales para el día a día', icon: '👟' },
-          { name: 'Running', slug: 'running', description: 'Zapatillas para correr de alto rendimiento', icon: '⚡' },
-          { name: 'Colecciones Limitadas', slug: 'limited-editions', description: 'Ediciones exclusivas y colabs', icon: '✨' },
-        ].map((cat) => (
+  {/* Categories Grid */}
+  <section class="py-16 md:py-24 bg-brand-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-end mb-12">
+        <div>
+          <h2 class="text-4xl md:text-5xl font-display font-bold text-white uppercase tracking-tight">
+            Categorías
+          </h2>
+          <p class="text-neutral-500 mt-2">Encuentra tu estilo</p>
+        </div>
+        <a href="/productos" class="text-brand-red font-bold uppercase text-sm hover:text-brand-orange transition-colors">
+          Ver todo →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {categories?.map((cat) => (
           <a
             href={`/categoria/${cat.slug}`}
-            class="group"
+            class="group relative bg-brand-gray overflow-hidden aspect-square hover:scale-[1.02] transition-all"
           >
-            <div class="aspect-square bg-neutral-300 mb-4 overflow-hidden flex items-center justify-center text-4xl">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-black/90 via-brand-black/20 to-transparent z-10"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-6xl md:text-8xl opacity-30 group-hover:opacity-50 group-hover:scale-110 transition-all">
               {cat.icon}
             </div>
-            <h3 class="text-2xl font-display font-bold text-brand-navy group-hover:text-brand-charcoal transition-colors">
-              {cat.name}
-            </h3>
-            <p class="text-neutral-600 mt-2">
-              {cat.description}
-            </p>
+            <div class="absolute bottom-0 left-0 right-0 p-4 z-20">
+              <h3 class="text-xl md:text-2xl font-display font-bold text-white uppercase tracking-wide group-hover:text-brand-red transition-colors">
+                {cat.name}
+              </h3>
+              <p class="text-neutral-400 text-sm mt-1 hidden md:block">
+                {cat.description?.split(':')[0]}
+              </p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {/* Featured Products */}
+  <section class="py-16 md:py-24 bg-brand-black">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-end mb-12">
+        <div>
+          <div class="text-brand-red font-bold uppercase text-sm tracking-wider mb-2">Hot Right Now</div>
+          <h2 class="text-4xl md:text-5xl font-display font-bold text-white uppercase tracking-tight">
+            Destacados
+          </h2>
+        </div>
+        <a href="/productos" class="text-brand-red font-bold uppercase text-sm hover:text-brand-orange transition-colors">
+          Ver todo →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {products?.map((product) => (
+          <a href={`/productos/${product.slug}`} class="group bg-brand-gray overflow-hidden hover:scale-[1.02] transition-all">
+            {/* Image */}
+            <div class="aspect-square bg-brand-dark relative overflow-hidden">
+              {product.is_limited_edition && (
+                <div class="absolute top-4 left-4 bg-brand-red text-white text-xs font-bold px-2 py-1 z-10 uppercase">
+                  🔥 Limited
+                </div>
+              )}
+              <img 
+                src={product.images?.[0] || 'https://via.placeholder.com/400x400?text=Sneaker'}
+                alt={product.name}
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+            </div>
+            {/* Info */}
+            <div class="p-4">
+              <div class="text-brand-red text-xs font-bold uppercase tracking-wider mb-1">
+                {product.brand}
+              </div>
+              <h3 class="text-white font-bold text-lg group-hover:text-brand-red transition-colors line-clamp-1">
+                {product.name}
+              </h3>
+              <div class="flex items-center gap-2 mt-2">
+                <span class="text-white font-bold text-xl">
+                  ${(product.price / 100).toFixed(0)}
+                </span>
+                {product.original_price && product.original_price > product.price && (
+                  <span class="text-neutral-500 line-through text-sm">
+                    ${(product.original_price / 100).toFixed(0)}
+                  </span>
+                )}
+              </div>
+            </div>
           </a>
         ))}
       </div>
@@ -57,30 +170,51 @@ import PublicLayout from '@layouts/PublicLayout.astro';
   </section>
 
   {/* USPs Section */}
-  <section class="bg-brand-charcoal text-white py-16 md:py-24">
+  <section class="bg-brand-red text-white py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
         <div>
-          <div class="text-4xl font-bold mb-4">100%</div>
-          <h3 class="text-xl font-semibold mb-2">Auténtico</h3>
-          <p class="text-neutral-300">
-            Cada prenda verificada y certificada
-          </p>
+          <div class="text-4xl mb-2">✓</div>
+          <h3 class="font-bold uppercase tracking-wide">100% Auténtico</h3>
+          <p class="text-white/80 text-sm mt-1">Verificado</p>
         </div>
         <div>
-          <div class="text-4xl font-bold mb-4">⚡</div>
-          <h3 class="text-xl font-semibold mb-2">Envío Rápido</h3>
-          <p class="text-neutral-300">
-            Entrega en 2-4 días laborales
-          </p>
+          <div class="text-4xl mb-2">🚀</div>
+          <h3 class="font-bold uppercase tracking-wide">Envío Express</h3>
+          <p class="text-white/80 text-sm mt-1">24-48h</p>
         </div>
         <div>
-          <div class="text-4xl font-bold mb-4">∞</div>
-          <h3 class="text-xl font-semibold mb-2">Garantía</h3>
-          <p class="text-neutral-300">
-            Satisfacción garantizada o devolución
-          </p>
+          <div class="text-4xl mb-2">🔄</div>
+          <h3 class="font-bold uppercase tracking-wide">Devolución Fácil</h3>
+          <p class="text-white/80 text-sm mt-1">30 días</p>
         </div>
+        <div>
+          <div class="text-4xl mb-2">💳</div>
+          <h3 class="font-bold uppercase tracking-wide">Pago Seguro</h3>
+          <p class="text-white/80 text-sm mt-1">SSL Encriptado</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* CTA Section */}
+  <section class="bg-brand-dark py-20">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-4xl md:text-6xl font-display font-bold text-white uppercase tracking-tight mb-6">
+        No te pierdas<br/><span class="text-brand-red">ningún drop</span>
+      </h2>
+      <p class="text-neutral-400 text-lg mb-8">
+        Únete a nuestra lista y sé el primero en enterarte de los nuevos lanzamientos y ofertas exclusivas.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+        <input 
+          type="email" 
+          placeholder="tu@email.com" 
+          class="bg-brand-gray border border-brand-gray text-white px-6 py-4 flex-1 focus:outline-none focus:border-brand-red"
+        />
+        <button class="bg-brand-red text-white px-8 py-4 font-bold uppercase hover:bg-brand-orange transition-colors">
+          Suscribirse
+        </button>
       </div>
     </div>
   </section>

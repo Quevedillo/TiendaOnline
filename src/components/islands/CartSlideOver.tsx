@@ -16,7 +16,7 @@ export default function CartSlideOver() {
   const total = getCartTotal();
 
   const formatPrice = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`;
+    return `$${(cents / 100).toFixed(0)}`;
   };
 
   return (
@@ -24,26 +24,26 @@ export default function CartSlideOver() {
       {/* Overlay */}
       {cart.isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="fixed inset-0 bg-black bg-opacity-70 z-40"
           onClick={() => closeCart()}
         />
       )}
 
       {/* Slide Over Panel */}
       <div
-        className={`fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+        className={`fixed right-0 top-0 h-full w-full max-w-md bg-brand-dark shadow-2xl z-50 transform transition-transform duration-300 ${
           cart.isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         <div className="h-full flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-neutral-200">
-            <h2 className="text-2xl font-display font-bold text-brand-navy">
-              Carrito
+          <div className="flex items-center justify-between p-6 border-b border-brand-gray bg-brand-black">
+            <h2 className="text-2xl font-display font-bold text-white uppercase tracking-tight">
+              🛒 Tu Carrito
             </h2>
             <button
               onClick={() => closeCart()}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-neutral-400 hover:text-white transition-colors"
               aria-label="Cerrar carrito"
             >
               <svg
@@ -64,17 +64,25 @@ export default function CartSlideOver() {
 
           {/* Items */}
           {cart.items.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-gray-500 text-center">
+            <div className="flex-1 flex flex-col items-center justify-center p-8">
+              <div className="text-6xl mb-4">👟</div>
+              <p className="text-neutral-500 text-center text-lg">
                 Tu carrito está vacío
               </p>
+              <a 
+                href="/productos"
+                onClick={() => closeCart()}
+                className="mt-6 bg-brand-red text-white px-6 py-3 font-bold uppercase hover:bg-brand-orange transition-colors"
+              >
+                Explorar Kicks
+              </a>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {cart.items.map((item) => (
-                <div key={`${item.product_id}-${item.size}`} className="flex gap-4">
+                <div key={`${item.product_id}-${item.size}`} className="flex gap-4 bg-brand-gray p-4">
                   {/* Product Image */}
-                  <div className="w-24 h-24 bg-neutral-200 flex-shrink-0 overflow-hidden">
+                  <div className="w-24 h-24 bg-brand-black flex-shrink-0 overflow-hidden">
                     {item.product.images[0] && (
                       <img
                         src={item.product.images[0]}
@@ -87,19 +95,22 @@ export default function CartSlideOver() {
                   {/* Product Details */}
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-sm">
+                      <p className="text-brand-red text-xs font-bold uppercase">
+                        {item.product.brand}
+                      </p>
+                      <h3 className="font-bold text-white text-sm line-clamp-2">
                         {item.product.name}
                       </h3>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Talla: {item.size}
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Talla: <span className="text-white">{item.size}</span>
                       </p>
-                      <p className="text-sm font-bold text-brand-navy mt-1">
+                      <p className="text-lg font-bold text-brand-red mt-1">
                         {formatPrice(item.product.price)}
                       </p>
                     </div>
 
                     {/* Quantity Controls */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() =>
                           updateCartItemQuantity(
@@ -108,11 +119,11 @@ export default function CartSlideOver() {
                             item.quantity - 1
                           )
                         }
-                        className="px-2 py-1 border border-neutral-300 text-xs hover:bg-neutral-50"
+                        className="w-8 h-8 bg-brand-black text-white text-sm font-bold hover:bg-brand-red transition-colors"
                       >
                         −
                       </button>
-                      <span className="text-sm font-medium w-8 text-center">
+                      <span className="text-sm font-bold text-white w-8 text-center">
                         {item.quantity}
                       </span>
                       <button
@@ -123,15 +134,15 @@ export default function CartSlideOver() {
                             item.quantity + 1
                           )
                         }
-                        className="px-2 py-1 border border-neutral-300 text-xs hover:bg-neutral-50"
+                        className="w-8 h-8 bg-brand-black text-white text-sm font-bold hover:bg-brand-red transition-colors"
                       >
                         +
                       </button>
                       <button
                         onClick={() => removeFromCart(item.product_id, item.size)}
-                        className="ml-auto text-xs text-red-600 hover:text-red-800"
+                        className="ml-auto text-xs text-neutral-500 hover:text-brand-red transition-colors"
                       >
-                        Eliminar
+                        ✕ Quitar
                       </button>
                     </div>
                   </div>
@@ -142,17 +153,17 @@ export default function CartSlideOver() {
 
           {/* Footer with Total and Checkout */}
           {cart.items.length > 0 && (
-            <div className="border-t border-neutral-200 p-6 space-y-4">
-              <div className="flex justify-between items-center text-lg font-bold text-brand-navy">
-                <span>Total:</span>
-                <span>{formatPrice(total)}</span>
+            <div className="border-t border-brand-gray p-6 space-y-4 bg-brand-black">
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400 uppercase text-sm">Total:</span>
+                <span className="text-2xl font-bold text-white">{formatPrice(total)}</span>
               </div>
-              <button className="w-full bg-brand-navy text-white py-3 font-semibold hover:bg-brand-charcoal transition-colors">
-                Proceder al Pago
+              <button className="w-full bg-brand-red text-white py-4 font-bold uppercase tracking-wider hover:bg-brand-orange transition-all hover:scale-[1.02]">
+                🔒 Proceder al Pago
               </button>
               <button
                 onClick={() => closeCart()}
-                className="w-full border border-brand-navy text-brand-navy py-3 font-semibold hover:bg-neutral-50 transition-colors"
+                className="w-full bg-brand-gray text-white py-3 font-bold uppercase tracking-wider hover:bg-brand-dark transition-colors"
               >
                 Continuar Comprando
               </button>
