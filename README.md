@@ -1,13 +1,20 @@
-# FashionMarket - Tienda Online Premium 👔
+# KicksPremium - Sneakers Exclusivos y Limitados
 
-Arquitectura **Headless E-commerce** con **Astro 5.0**, **Supabase** y **Tailwind CSS**.
+Tienda de **Sneakers Exclusivos** con **Astro 5.0**, **Supabase**, **Stripe** y **Tailwind CSS**.
 
-## 🏗️ Estructura del Proyecto
+## Colecciones
+
+- **Travis Scott** - Colaboraciones exclusivas con Jordan y Nike
+- **Jordan Special** - Air Jordans de ediciones especiales
+- **Adidas Collab** - Colaboraciones con artistas reconocidos
+- **Exclusive Drops** - Ediciones limitadas y piezas raras
+
+## Estructura del Proyecto
 
 ```
-fashionmarket/
+kickspremium/
 ├── public/
-│   └── fonts/                      # Tipografías personalizadas
+│   └── fonts/                      # Tipografias personalizadas
 ├── src/
 │   ├── components/
 │   │   ├── islands/               # Componentes interactivos React
@@ -17,11 +24,11 @@ fashionmarket/
 │   │   ├── product/               # Componentes de producto
 │   │   │   ├── ProductCard.astro
 │   │   │   └── ProductGallery.astro
-│   │   └── ui/                    # Componentes UI genéricos
+│   │   └── ui/                    # Componentes UI genericos
 │   │       └── Button.astro
 │   ├── layouts/
 │   │   ├── BaseLayout.astro       # Layout base
-│   │   ├── PublicLayout.astro     # Layout tienda pública
+│   │   ├── PublicLayout.astro     # Layout tienda publica
 │   │   └── AdminLayout.astro      # Layout panel admin
 │   ├── lib/
 │   │   └── supabase.ts            # Cliente Supabase singleton
@@ -31,13 +38,13 @@ fashionmarket/
 │   │   │   ├── index.astro        # Listado productos (SSG)
 │   │   │   └── [slug].astro       # Detalle producto (SSG)
 │   │   ├── categoria/
-│   │   │   └── [slug].astro       # Filtro por categoría
-│   │   ├── carrito.astro          # Página carrito (SSR)
+│   │   │   └── [slug].astro       # Filtro por categoria
+│   │   ├── carrito.astro          # Pagina carrito (SSR)
 │   │   └── admin/
 │   │       ├── index.astro        # Dashboard admin (SSR)
 │   │       ├── login.astro        # Login admin (SSR)
 │   │       └── productos/
-│   │           ├── index.astro    # Gestión inventario (SSR)
+│   │           ├── index.astro    # Gestion inventario (SSR)
 │   │           ├── nuevo.astro    # Crear producto (SSR)
 │   │           └── [id].astro     # Editar producto (SSR)
 │   ├── stores/
@@ -46,18 +53,15 @@ fashionmarket/
 │   │   └── global.css             # Estilos CSS globales
 │   ├── middleware.ts              # Auth middleware
 │   └── env.d.ts                   # Tipos TypeScript
-├── astro.config.mjs               # Configuración Astro (output: hybrid)
-├── tailwind.config.mjs            # Configuración Tailwind personalizada
+├── astro.config.mjs               # Configuracion Astro (output: hybrid)
+├── tailwind.config.mjs            # Configuracion Tailwind personalizada
 ├── tsconfig.json                  # Config TypeScript
 ├── package.json
-├── database.sql                   # Schema PostgreSQL
+├── SETUP_DATABASE.sql             # Schema PostgreSQL completo
 └── .env.example
 ```
 
-## 🎨 Paleta de Colores - "Minimalismo Sofisticado"
-
-- **Azul Marino**: `#001F3F` (Primary)
-- **Gris Carbón**: `#2C3E50` (Secondary)
+## Paleta de Colores - Estilo Sneaker
 - **Crema**: `#F9F8F6` (Background)
 - **Dorado Mate**: `#D4AF6C` (Accent)
 - **Neutros**: Grises calibrados del 50 al 900

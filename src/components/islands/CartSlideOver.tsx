@@ -23,7 +23,7 @@ export default function CartSlideOver() {
   const total = getCartTotal();
 
   const formatPrice = (cents: number) => {
-    return `$${(cents / 100).toFixed(0)}`;
+    return `${(cents / 100).toFixed(0)} EUR`;
   };
 
   const handleCheckout = async () => {

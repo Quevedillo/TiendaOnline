@@ -24,8 +24,7 @@ if (!category) {
 let productsQuery = supabase
   .from('products')
   .select('*')
-  .eq('category_id', category.id)
-  .eq('status', 'active');
+  .eq('category_id', category.id);
 
 // Apply sort
 if (sortFilter === 'price-asc') {

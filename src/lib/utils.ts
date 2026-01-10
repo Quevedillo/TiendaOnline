@@ -1,14 +1,14 @@
 /**
- * Utility functions for FashionMarket
+ * Utility functions for KicksPremium
  */
 
 /**
  * Format price from cents to currency string
  * @param cents Price in cents
- * @returns Formatted price string (e.g., "$99.99")
+ * @returns Formatted price string (e.g., "99.99 EUR")
  */
 export const formatPrice = (cents: number): string => {
-  return `$${(cents / 100).toFixed(2)}`;
+  return `${(cents / 100).toFixed(2)} EUR`;
 };
 
 /**
