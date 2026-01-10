@@ -5,6 +5,10 @@ import type { Product } from '@lib/supabase';
 
 const { slug } = Astro.params;
 
+// Get sort parameter
+const url = new URL(Astro.request.url);
+const sortFilter = url.searchParams.get('sort') || 'newest'; // newest, price-asc, price-desc
+
 // Fetch category and its products
 const { data: category } = await supabase
   .from('categories')
@@ -17,12 +21,22 @@ if (!category) {
   return Astro.redirect('/productos');
 }
 
-const { data: products } = await supabase
+let productsQuery = supabase
   .from('products')
   .select('*')
   .eq('category_id', category.id)
-  .eq('status', 'active')
-  .order('created_at', { ascending: false });
+  .eq('status', 'active');
+
+// Apply sort
+if (sortFilter === 'price-asc') {
+  productsQuery = productsQuery.order('price', { ascending: true });
+} else if (sortFilter === 'price-desc') {
+  productsQuery = productsQuery.order('price', { ascending: false });
+} else {
+  productsQuery = productsQuery.order('created_at', { ascending: false });
+}
+
+const { data: products } = await productsQuery;
 
 const productsList: Product[] = products || [];
 
@@ -62,6 +76,33 @@ const categoryEmojis: Record<string, string> = {
           {category.description}
         </p>
       )}
+    </div>
+  </section>
+
+  {/* Sort Section */}
+  <section class="bg-brand-gray border-b border-brand-black sticky top-16 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center gap-2">
+        <span class="text-neutral-500 text-sm uppercase font-bold">Ordenar:</span>
+        <a 
+          href={`/categoria/${category.slug}`}
+          class={`px-3 py-1.5 text-xs font-bold uppercase transition-colors ${!sortFilter || sortFilter === 'newest' ? 'bg-brand-red text-white' : 'bg-brand-dark text-white/70 hover:bg-brand-red hover:text-white'}`}
+        >
+          Más recientes
+        </a>
+        <a 
+          href={`/categoria/${category.slug}?sort=price-asc`}
+          class={`px-3 py-1.5 text-xs font-bold uppercase transition-colors ${sortFilter === 'price-asc' ? 'bg-brand-red text-white' : 'bg-brand-dark text-white/70 hover:bg-brand-red hover:text-white'}`}
+        >
+          Precio: Menor a Mayor
+        </a>
+        <a 
+          href={`/categoria/${category.slug}?sort=price-desc`}
+          class={`px-3 py-1.5 text-xs font-bold uppercase transition-colors ${sortFilter === 'price-desc' ? 'bg-brand-red text-white' : 'bg-brand-dark text-white/70 hover:bg-brand-red hover:text-white'}`}
+        >
+          Precio: Mayor a Menor
+        </a>
+      </div>
     </div>
   </section>
 

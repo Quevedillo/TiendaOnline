@@ -8,6 +8,7 @@ const url = new URL(Astro.request.url);
 const brandFilter = url.searchParams.get('brand');
 const colorFilter = url.searchParams.get('color');
 const categoryFilter = url.searchParams.get('category');
+const sortFilter = url.searchParams.get('sort') || 'newest'; // newest, price-asc, price-desc
 
 // Fetch brands for filter
 const { data: brands } = await supabase
@@ -30,8 +31,16 @@ const { data: categories } = await supabase
 // Build products query with filters
 let productsQuery = supabase
   .from('products')
-  .select('*, categories(name, slug)')
-  .order('created_at', { ascending: false });
+  .select('*, categories(name, slug)');
+
+// Apply sort
+if (sortFilter === 'price-asc') {
+  productsQuery = productsQuery.order('price', { ascending: true });
+} else if (sortFilter === 'price-desc') {
+  productsQuery = productsQuery.order('price', { ascending: false });
+} else {
+  productsQuery = productsQuery.order('created_at', { ascending: false });
+}
 
 if (brandFilter) {
   productsQuery = productsQuery.eq('brand', brandFilter);
@@ -69,6 +78,7 @@ const activeFilters = {
   brand: brandFilter,
   color: colorFilter,
   category: categoryFilter,
+  sort: sortFilter,
 };
 const hasFilters = brandFilter || colorFilter || categoryFilter;
 ---
@@ -155,7 +165,29 @@ const hasFilters = brandFilter || colorFilter || categoryFilter;
             </a>
           ))}
         </div>
-      </div>
+
+        {/* Sort Filter */}
+        <div class="flex flex-wrap gap-2 items-center ml-auto">
+          <span class="text-neutral-500 text-sm uppercase font-bold">Ordenar:</span>
+          <a 
+            href={`/productos${categoryFilter ? `?category=${categoryFilter}` : ''}${brandFilter ? `${categoryFilter ? '&' : '?'}brand=${brandFilter}` : ''}${colorFilter ? `${categoryFilter || brandFilter ? '&' : '?'}color=${colorFilter}` : ''}`}
+            class={`px-3 py-1.5 text-xs font-bold uppercase transition-colors ${!sortFilter || sortFilter === 'newest' ? 'bg-brand-red text-white' : 'bg-brand-dark text-white/70 hover:bg-brand-red hover:text-white'}`}
+          >
+            Más recientes
+          </a>
+          <a 
+            href={`/productos?sort=price-asc${categoryFilter ? `&category=${categoryFilter}` : ''}${brandFilter ? `&brand=${brandFilter}` : ''}${colorFilter ? `&color=${colorFilter}` : ''}`}
+            class={`px-3 py-1.5 text-xs font-bold uppercase transition-colors ${sortFilter === 'price-asc' ? 'bg-brand-red text-white' : 'bg-brand-dark text-white/70 hover:bg-brand-red hover:text-white'}`}
+          >
+            Precio: Menor a Mayor
+          </a>
+          <a 
+            href={`/productos?sort=price-desc${categoryFilter ? `&category=${categoryFilter}` : ''}${brandFilter ? `&brand=${brandFilter}` : ''}${colorFilter ? `&color=${colorFilter}` : ''}`}
+            class={`px-3 py-1.5 text-xs font-bold uppercase transition-colors ${sortFilter === 'price-desc' ? 'bg-brand-red text-white' : 'bg-brand-dark text-white/70 hover:bg-brand-red hover:text-white'}`}
+          >
+            Precio: Mayor a Menor
+          </a>
+        </div>
 
       {/* Active Filters Display */}
       {hasFilters && (
