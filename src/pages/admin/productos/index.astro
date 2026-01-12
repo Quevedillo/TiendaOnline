@@ -35,7 +35,19 @@ if (stockFilter === 'low') {
 
 const { data: products, error } = await query;
 
-// Filtrar por búsqueda
+// Obtener TODOS los productos para stats (sin filtros)
+const { data: allProducts } = await supabase
+  .from('products')
+  .select('id, stock');
+
+// Stats siempre sobre TODOS los productos
+const allProductsList = allProducts || [];
+const totalProducts = allProductsList.length;
+const inStock = allProductsList.filter(p => p.stock > 0).length;
+const lowStock = allProductsList.filter(p => p.stock > 0 && p.stock <= 3).length;
+const outOfStock = allProductsList.filter(p => p.stock === 0).length;
+
+// Filtrar por búsqueda (para la lista visual)
 let productsList = products || [];
 if (searchQuery) {
   const search = searchQuery.toLowerCase();
@@ -46,18 +58,12 @@ if (searchQuery) {
   );
 }
 
-// Stats
-const totalProducts = productsList.length;
-const inStock = productsList.filter(p => p.stock > 0).length;
-const lowStock = productsList.filter(p => p.stock > 0 && p.stock <= 3).length;
-const outOfStock = productsList.filter(p => p.stock === 0).length;
-
-// Formatear moneda
-const formatCurrency = (cents: number) => {
+// Formatear moneda (el precio está en euros, no en centavos)
+const formatCurrency = (price: number) => {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR'
-  }).format(cents / 100);
+  }).format(price);
 };
 ---
 
@@ -227,7 +233,7 @@ const formatCurrency = (cents: number) => {
                         </svg>
                       </a>
                       <a
-                        href={`/admin/productos/${product.id}/editar`}
+                        href={`/admin/productos/${product.slug}/editar`}
                         class="p-2 text-neutral-400 hover:text-brand-red hover:bg-brand-red/10 rounded-lg transition-colors"
                         title="Editar"
                       >
