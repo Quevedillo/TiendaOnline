@@ -68,7 +68,7 @@ const thumbnailImages = images.slice(0, 4);
   {/* Thumbnail Gallery */}
   {thumbnailImages.length > 1 && (
     <div class="grid grid-cols-4 gap-2">
-      {thumbnailImages.map((image, index) => (
+      {thumbnailImages.map((image: string, index: number) => (
         <button
           class="thumbnail-btn aspect-square overflow-hidden border-2 border-transparent hover:border-brand-black transition-colors rounded-lg group"
           data-image-url={optimizeCloudinaryUrl(image, { width: 1200, height: 1200 })}
@@ -95,16 +95,14 @@ const thumbnailImages = images.slice(0, 4);
 <script>
   // Gallery interaction
   const thumbnails = document.querySelectorAll('.thumbnail-btn');
-  const mainImage = document.getElementById('main-image');
+  const mainImage = document.getElementById('main-image') as HTMLImageElement;
 
-  if (mainImage) {
+  if (mainImage && thumbnails.length > 0) {
     thumbnails.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const newUrl = (btn as HTMLElement).dataset.imageUrl;
+      btn.addEventListener('click', () => {
+        const newUrl = btn.getAttribute('data-image-url');
         
         if (newUrl) {
-          // Update main image src
           mainImage.src = newUrl;
           
           // Update active state
@@ -115,9 +113,7 @@ const thumbnailImages = images.slice(0, 4);
     });
 
     // Set first thumbnail as active
-    if (thumbnails.length > 0) {
-      thumbnails[0].classList.add('border-brand-black');
-    }
+    thumbnails[0]?.classList.add('border-brand-black');
   }
 </script>
 
