@@ -102,8 +102,8 @@ kickspremium/
 
 ### 1. Clonar y instalar dependencias
 
-```bash
-cd fashionmarket
+```
+cd kickspremium
 npm install
 ```
 
@@ -174,7 +174,7 @@ En Supabase Console:
 
 ```sql
 INSERT INTO admin_users (id, email, full_name, role)
-VALUES ('your-uuid', 'admin@fashionmarket.com', 'Admin User', 'admin');
+VALUES ('your-uuid', 'admin@kickspremium.com', 'Admin User', 'admin');
 ```
 
 ### 5. Desarrollo
@@ -354,5 +354,5 @@ const imageUrl = supabase.storage
 
 ---
 
-**Creado con ❤️ para FashionMarket**
+**Creado con ❤️ para KicksPremium**
 *Arquitectura moderna, performance enterprise-grade, estética premium.*

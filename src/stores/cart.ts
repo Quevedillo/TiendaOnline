@@ -17,7 +17,7 @@ const getInitialCart = (): CartStore => {
     return initialState;
   }
 
-  const stored = localStorage.getItem('fashionmarket-cart');
+  const stored = localStorage.getItem('kickspremium-cart');
   if (stored) {
     try {
       return JSON.parse(stored);
@@ -33,7 +33,7 @@ export const cartStore = atom<CartStore>(getInitialCart());
 // Save to localStorage whenever cart changes
 cartStore.subscribe((value) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('fashionmarket-cart', JSON.stringify(value));
+    localStorage.setItem('kickspremium-cart', JSON.stringify(value));
   }
 });
 

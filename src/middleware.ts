@@ -13,8 +13,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Check if user is authenticated
     if (!accessToken || !refreshToken) {
       // Redirect to login if not authenticated
-      if (!context.url.pathname.includes("/admin/login")) {
-        return context.redirect("/admin/login");
+      if (!context.url.pathname.includes("/auth/login")) {
+        return context.redirect("/auth/login");
       }
     } else {
       try {
@@ -27,14 +27,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
         if (authError || !user) {
           context.cookies.delete('sb-access-token');
           context.cookies.delete('sb-refresh-token');
-          return context.redirect("/admin/login");
+          return context.redirect("/auth/login");
         }
 
         // Store user in context for use in pages
         context.locals.user = user;
 
         // Verify user is admin (unless on login page)
-        if (!context.url.pathname.includes("/admin/login")) {
+        if (!context.url.pathname.includes("/auth/login")) {
           const { data: userProfile, error: profileError } = await supabase
             .from('user_profiles')
             .select('is_admin')

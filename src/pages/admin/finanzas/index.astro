@@ -1,0 +1,496 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+import { supabase } from '@lib/supabase';
+import { stripe } from '@lib/stripe';
+
+// ============================================================================
+// DATOS DE STRIPE (Fuente principal de ingresos)
+// ============================================================================
+interface StripePayment {
+  id: string;
+  amount: number;
+  currency: string;
+  created: Date;
+  status: 'paid' | 'refunded';
+  customer: string;
+}
+
+interface MonthlyData {
+  month: string;
+  sales: number;
+  costs: number;
+  profit: number;
+}
+
+let stripeData = {
+  balance: 0,
+  monthlyRevenue: 0,
+  todayRevenue: 0,
+  paymentsCount: 0,
+  recentPayments: [] as StripePayment[],
+  chargesByMonth: new Map<string, number>()
+};
+
+try {
+  // Obtener balance de Stripe
+  const balance = await stripe.balance.retrieve();
+  stripeData.balance = balance.available.reduce((sum, b) => sum + b.amount, 0) + 
+                       balance.pending.reduce((sum, b) => sum + b.amount, 0);
+
+  // Obtener TODOS los pagos (para calcular ventas totales)
+  const allCharges = await stripe.charges.list({ limit: 100 });
+  
+  // Filtros de tiempo
+  const oneMonthAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayTimestamp = Math.floor(todayStart.getTime() / 1000);
+
+  // Filtrar pagos completados
+  const paidCharges = allCharges.data.filter(c => c.paid && !c.refunded);
+  
+  // Ingresos del mes
+  stripeData.paymentsCount = paidCharges.filter(c => c.created >= oneMonthAgo).length;
+  stripeData.monthlyRevenue = paidCharges
+    .filter(c => c.created >= oneMonthAgo)
+    .reduce((sum, c) => sum + c.amount, 0);
+  
+  // Ingresos de hoy
+  stripeData.todayRevenue = paidCharges
+    .filter(c => c.created >= todayTimestamp)
+    .reduce((sum, c) => sum + c.amount, 0);
+
+  // Agrupar por mes para la gráfica
+  paidCharges.forEach(charge => {
+    const date = new Date(charge.created * 1000);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const current = stripeData.chargesByMonth.get(monthKey) || 0;
+    stripeData.chargesByMonth.set(monthKey, current + charge.amount);
+  });
+
+  // Últimos 10 pagos
+  stripeData.recentPayments = paidCharges
+    .slice(0, 10)
+    .map(c => ({
+      id: c.id,
+      amount: c.amount,
+      currency: c.currency,
+      created: new Date(c.created * 1000),
+      status: (c.refunded ? 'refunded' : 'paid') as 'paid' | 'refunded',
+      customer: c.billing_details?.email || 'N/A'
+    }));
+} catch (error) {
+  console.error('Error fetching Stripe data:', error);
+}
+
+// ============================================================================
+// DATOS DE PRODUCTOS (para cálculo de márgenes)
+// ============================================================================
+const { data: products } = await supabase
+  .from('products')
+  .select('id, name, price, cost_price, stock')
+  .order('name');
+
+// Calcular inversión en inventario (coste × stock)
+const totalInventoryCost = (products || []).reduce((sum, p) => {
+  const cost = p.cost_price || 0;
+  return sum + (cost * (p.stock || 0));
+}, 0);
+
+// Calcular valor de inventario a precio de venta
+const totalInventoryValue = (products || []).reduce((sum, p) => {
+  return sum + ((p.price || 0) * (p.stock || 0));
+}, 0);
+
+// ============================================================================
+// DATOS PARA GRÁFICA (últimos 6 meses)
+// ============================================================================
+const monthlyData: MonthlyData[] = [];
+const now = new Date();
+
+for (let i = 5; i >= 0; i--) {
+  const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+  const monthName = monthDate.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
+  
+  const sales = stripeData.chargesByMonth.get(monthKey) || 0;
+  // Estimamos costes como 40% de las ventas si no hay datos de cost_price
+  const estimatedCosts = sales * 0.4;
+  
+  monthlyData.push({
+    month: monthName,
+    sales: sales / 100,
+    costs: estimatedCosts / 100,
+    profit: (sales - estimatedCosts) / 100
+  });
+}
+
+// ============================================================================
+// FUNCIONES DE FORMATO
+// ============================================================================
+const formatCurrency = (cents: number) => {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR'
+  }).format(cents / 100);
+};
+---
+
+<AdminLayout title="Finanzas" currentPage="finanzas">
+  <div class="space-y-8">
+    {/* Header */}
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-brand-black">Panel Financiero</h1>
+        <p class="text-neutral-500 mt-1">Análisis de ingresos, costes y beneficios</p>
+      </div>
+      <a 
+        href="https://dashboard.stripe.com/test/dashboard" 
+        target="_blank"
+        rel="noopener noreferrer"
+        class="px-4 py-2 bg-[#635BFF] text-white rounded-lg font-medium hover:bg-[#5046e5] transition-colors flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 32 32" fill="currentColor">
+          <path d="M13.333 10.667c0-1.174.933-2.134 2.134-2.134h1.066c1.174 0 2.134.96 2.134 2.134v10.666c0 1.174-.96 2.134-2.134 2.134h-1.066c-1.2 0-2.134-.96-2.134-2.134V10.667z"/>
+        </svg>
+        Dashboard Stripe
+      </a>
+    </div>
+
+    {/* KPIs principales - Usando datos de STRIPE */}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Ventas Totales (desde Stripe) */}
+      <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <span class="text-white/70 text-sm">Ingresos Mes</span>
+        </div>
+        <p class="text-3xl font-bold">{formatCurrency(stripeData.monthlyRevenue)}</p>
+        <p class="text-white/70 text-sm mt-2">{stripeData.paymentsCount} pagos este mes</p>
+      </div>
+
+      {/* Ingresos de Hoy */}
+      <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+          <span class="text-white/70 text-sm">Hoy</span>
+        </div>
+        <p class="text-3xl font-bold">{formatCurrency(stripeData.todayRevenue)}</p>
+        <p class="text-white/70 text-sm mt-2">Ventas del día</p>
+      </div>
+
+      {/* Balance Stripe */}
+      <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+          </div>
+          <span class="text-white/70 text-sm">Balance Stripe</span>
+        </div>
+        <p class="text-3xl font-bold">{formatCurrency(stripeData.balance)}</p>
+        <p class="text-white/70 text-sm mt-2">Disponible + Pendiente</p>
+      </div>
+
+      {/* Inversión en Inventario */}
+      <div class="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-6 text-white">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+          <span class="text-white/70 text-sm">Valor Stock</span>
+        </div>
+        <p class="text-3xl font-bold">{formatCurrency(totalInventoryValue)}</p>
+        <p class="text-white/70 text-sm mt-2">
+          Coste: {formatCurrency(totalInventoryCost)}
+        </p>
+      </div>
+    </div>
+
+    {/* Gráfica de Ingresos */}
+    <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+      <div class="p-6 border-b border-neutral-200 bg-neutral-50">
+        <h2 class="font-semibold text-brand-black">Ingresos Mensuales</h2>
+        <p class="text-sm text-neutral-500 mt-1">Últimos 6 meses desde Stripe</p>
+      </div>
+      <div class="p-6">
+        <div class="h-80" id="chart-container">
+          <canvas id="financialChart"></canvas>
+        </div>
+        
+        {/* Leyenda */}
+        <div class="flex justify-center gap-8 mt-4">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-green-500 rounded"></div>
+            <span class="text-sm text-neutral-600">Ventas</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-red-400 rounded"></div>
+            <span class="text-sm text-neutral-600">Costes Est.</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-blue-500 rounded"></div>
+            <span class="text-sm text-neutral-600">Beneficio Est.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Desglose Balance Stripe */}
+      <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div class="p-6 border-b border-neutral-200 bg-neutral-50">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-[#635BFF] rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" viewBox="0 0 32 32" fill="currentColor">
+                <path d="M13.333 10.667c0-1.174.933-2.134 2.134-2.134h1.066c1.174 0 2.134.96 2.134 2.134v10.666c0 1.174-.96 2.134-2.134 2.134h-1.066c-1.2 0-2.134-.96-2.134-2.134V10.667z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="font-semibold text-brand-black">Resumen Stripe</h2>
+              <p class="text-sm text-neutral-500">Fondos y métricas</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+            <span class="text-green-700 font-medium">Balance Total</span>
+            <span class="text-2xl font-bold text-green-700">{formatCurrency(stripeData.balance)}</span>
+          </div>
+          <div class="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
+            <span class="text-blue-700 font-medium">Ingresos del Mes</span>
+            <span class="text-xl font-bold text-blue-700">{formatCurrency(stripeData.monthlyRevenue)}</span>
+          </div>
+          <div class="flex justify-between items-center p-4 bg-amber-50 rounded-lg">
+            <span class="text-amber-700 font-medium">Hoy</span>
+            <span class="text-xl font-bold text-amber-700">{formatCurrency(stripeData.todayRevenue)}</span>
+          </div>
+          <p class="text-sm text-neutral-500 text-center">
+            {stripeData.paymentsCount} pagos completados este mes
+          </p>
+        </div>
+      </div>
+
+      {/* Últimos Pagos */}
+      <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div class="p-6 border-b border-neutral-200 bg-neutral-50">
+          <h2 class="font-semibold text-brand-black">Últimos Pagos</h2>
+          <p class="text-sm text-neutral-500">Transacciones recientes</p>
+        </div>
+        <div class="divide-y divide-neutral-100 max-h-96 overflow-y-auto">
+          {stripeData.recentPayments.length > 0 ? (
+            stripeData.recentPayments.map((payment) => (
+              <div class="p-4 hover:bg-neutral-50 transition-colors">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="font-medium text-brand-black">{formatCurrency(payment.amount)}</p>
+                    <p class="text-sm text-neutral-500">{payment.customer}</p>
+                  </div>
+                  <div class="text-right">
+                    <span class={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      payment.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {payment.status === 'paid' ? 'Completado' : 'Reembolsado'}
+                    </span>
+                    <p class="text-xs text-neutral-400 mt-1">
+                      {payment.created.toLocaleDateString('es-ES', { 
+                        day: '2-digit', 
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div class="p-8 text-center text-neutral-500">
+              <svg class="w-12 h-12 mx-auto mb-3 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p>No hay pagos recientes</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    {/* Tabla de Productos con Márgenes */}
+    <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+      <div class="p-6 border-b border-neutral-200 bg-neutral-50">
+        <h2 class="font-semibold text-brand-black">Análisis de Márgenes por Producto</h2>
+        <p class="text-sm text-neutral-500 mt-1">Precio de venta vs coste de adquisición</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-neutral-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">Producto</th>
+              <th class="px-6 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">P. Venta</th>
+              <th class="px-6 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">P. Coste</th>
+              <th class="px-6 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">Margen</th>
+              <th class="px-6 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">Stock</th>
+              <th class="px-6 py-3 text-right text-xs font-semibold text-neutral-600 uppercase">Inversión</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-100">
+            {(products || []).slice(0, 15).map((product) => {
+              const margin = product.cost_price 
+                ? ((product.price - product.cost_price) / product.price * 100)
+                : 0;
+              const investment = (product.cost_price || 0) * (product.stock || 0);
+              
+              return (
+                <tr class="hover:bg-neutral-50">
+                  <td class="px-6 py-4">
+                    <p class="font-medium text-brand-black truncate max-w-xs">{product.name}</p>
+                  </td>
+                  <td class="px-6 py-4 text-right font-medium">
+                    {formatCurrency(product.price)}
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    {product.cost_price ? formatCurrency(product.cost_price) : (
+                      <span class="text-amber-600 text-sm">Sin definir</span>
+                    )}
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    {product.cost_price ? (
+                      <span class={`font-medium ${margin > 30 ? 'text-green-600' : margin > 15 ? 'text-amber-600' : 'text-red-600'}`}>
+                        {margin.toFixed(1)}%
+                      </span>
+                    ) : '-'}
+                  </td>
+                  <td class="px-6 py-4 text-right">{product.stock || 0}</td>
+                  <td class="px-6 py-4 text-right font-medium">
+                    {investment > 0 ? formatCurrency(investment) : '-'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {(products || []).length > 15 && (
+        <div class="p-4 text-center border-t border-neutral-200">
+          <a href="/admin/productos" class="text-brand-red hover:underline text-sm font-medium">
+            Ver todos los productos →
+          </a>
+        </div>
+      )}
+    </div>
+
+    {/* Info sobre coste de productos */}
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-6">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-amber-800">¿Cómo mejorar el análisis financiero?</h3>
+          <p class="text-amber-700 mt-2 text-sm">
+            Para calcular correctamente los beneficios, añade el <strong>precio de coste</strong> a cada producto 
+            desde la página de edición. Esto permitirá calcular márgenes reales y el retorno de inversión del inventario.
+          </p>
+          <a href="/admin/productos" class="inline-flex items-center gap-2 mt-3 text-amber-800 hover:text-amber-900 font-medium text-sm">
+            Ir a productos
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script define:vars={{ monthlyData }}>
+  // Crear gráfica con Chart.js
+  const ctx = document.getElementById('financialChart');
+  
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: monthlyData.map(d => d.month),
+        datasets: [
+          {
+            label: 'Ventas',
+            data: monthlyData.map(d => d.sales),
+            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+            borderColor: 'rgb(34, 197, 94)',
+            borderWidth: 1,
+            borderRadius: 4,
+          },
+          {
+            label: 'Costes Est.',
+            data: monthlyData.map(d => d.costs),
+            backgroundColor: 'rgba(248, 113, 113, 0.8)',
+            borderColor: 'rgb(248, 113, 113)',
+            borderWidth: 1,
+            borderRadius: 4,
+          },
+          {
+            label: 'Beneficio Est.',
+            data: monthlyData.map(d => d.profit),
+            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            borderColor: 'rgb(59, 130, 246)',
+            borderWidth: 1,
+            borderRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index',
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + new Intl.NumberFormat('es-ES', {
+                  style: 'currency',
+                  currency: 'EUR'
+                }).format(context.raw);
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return new Intl.NumberFormat('es-ES', {
+                  style: 'currency',
+                  currency: 'EUR',
+                  maximumFractionDigits: 0
+                }).format(value);
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+</script>

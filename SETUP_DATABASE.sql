@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS products (
   
   -- Precios (en centimos EUR)
   price INTEGER NOT NULL,
+  compare_price INTEGER DEFAULT NULL,
+  cost_price INTEGER DEFAULT NULL,
   
   -- Inventario
   stock INTEGER NOT NULL DEFAULT 0,
@@ -57,9 +59,13 @@ CREATE TABLE IF NOT EXISTS products (
   category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
   
   -- Datos especificos de sneakers
-  brand VARCHAR NOT NULL,
-  sku VARCHAR UNIQUE NOT NULL,
+  brand VARCHAR,
+  sku VARCHAR,
+  material VARCHAR,
+  color VARCHAR,
   is_limited_edition BOOLEAN DEFAULT FALSE,
+  is_featured BOOLEAN DEFAULT FALSE,
+  is_active BOOLEAN DEFAULT TRUE,
   
   -- Imagenes
   images TEXT[] NOT NULL DEFAULT '{}',
@@ -68,14 +74,21 @@ CREATE TABLE IF NOT EXISTS products (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   
-  CONSTRAINT valid_price CHECK (price >= 0)
+  CONSTRAINT valid_price CHECK (price >= 0),
+  CONSTRAINT valid_cost CHECK (cost_price IS NULL OR cost_price >= 0)
 );
 
 -- Agregar columnas si la tabla ya existe
 ALTER TABLE products
 ADD COLUMN IF NOT EXISTS brand VARCHAR,
 ADD COLUMN IF NOT EXISTS sku VARCHAR,
+ADD COLUMN IF NOT EXISTS material VARCHAR,
+ADD COLUMN IF NOT EXISTS color VARCHAR,
+ADD COLUMN IF NOT EXISTS compare_price INTEGER DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS cost_price INTEGER DEFAULT NULL,
 ADD COLUMN IF NOT EXISTS is_limited_edition BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
 ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';
 
 -- Crear indices para busquedas rapidas

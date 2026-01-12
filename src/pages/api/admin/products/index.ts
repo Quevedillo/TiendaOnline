@@ -172,6 +172,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       category_id: categoryId,
       price,
       compare_price: body.compare_price ? parseFloat(body.compare_price) : null,
+      cost_price: body.cost_price ? parseFloat(body.cost_price) : null,
       stock,
       images: body.images || [],
       sku: body.sku?.toString().trim() || null,
