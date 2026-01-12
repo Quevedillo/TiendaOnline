@@ -126,17 +126,17 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Parsear body
     const body = await request.json();
     
-    // Validar campos requeridos - convertir a valores estrictos
+    // Validar campos requeridos
     const name = body.name?.toString().trim();
     const description = body.description?.toString().trim();
     const categoryId = body.category_id?.toString().trim();
-    const price = parseFloat(body.price || 0);
-    const stock = parseInt(body.stock || 0);
+    const price = parseFloat(body.price ?? 0);
+    const stock = parseInt(body.stock ?? 0);
 
-    if (!name || !description || !categoryId || price <= 0 || stock < 0) {
+    if (!name || !description || !categoryId || isNaN(price) || price < 0 || isNaN(stock) || stock < 0) {
       console.error('Validación fallida:', { name, description, categoryId, price, stock });
       return new Response(JSON.stringify({ 
-        error: 'Faltan campos requeridos o son inválidos: name, description, category_id, price (>0), stock (>=0)',
+        error: 'Faltan campos requeridos o son inválidos',
         details: { name: !!name, description: !!description, categoryId: !!categoryId, price, stock }
       }), {
         status: 400,
