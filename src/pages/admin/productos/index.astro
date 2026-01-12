@@ -104,12 +104,12 @@ const formatCurrency = (cents: number) => {
             name="search"
             value={searchQuery}
             placeholder="Buscar por nombre, SKU o marca..."
-            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:border-brand-red"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:border-brand-red"
           />
         </div>
         <select
           name="category"
-          class="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:border-brand-red"
+          class="px-4 py-2 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:border-brand-red"
         >
           <option value="all">Todas las categorías</option>
           {categories?.map((cat) => (
@@ -120,7 +120,7 @@ const formatCurrency = (cents: number) => {
         </select>
         <select
           name="stock"
-          class="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:border-brand-red"
+          class="px-4 py-2 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:border-brand-red"
         >
           <option value="all" selected={stockFilter === 'all'}>Todo el stock</option>
           <option value="in" selected={stockFilter === 'in'}>En stock</option>

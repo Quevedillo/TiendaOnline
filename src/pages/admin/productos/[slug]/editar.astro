@@ -69,7 +69,7 @@ const { data: categories } = await supabase
               name="name"
               required
               value={product.name}
-              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+              class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
             />
           </div>
 
@@ -83,7 +83,7 @@ const { data: categories } = await supabase
               id="slug"
               name="slug"
               value={product.slug}
-              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+              class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
             />
             <p class="text-xs text-neutral-500 mt-1">URL: /productos/{product.slug}</p>
           </div>
@@ -97,7 +97,7 @@ const { data: categories } = await supabase
               id="category_id"
               name="category_id"
               required
-              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+              class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
             >
               <option value="">Selecciona una categoría</option>
               {categories?.map((cat) => (
@@ -116,7 +116,7 @@ const { data: categories } = await supabase
               name="description"
               required
               rows="4"
-              class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all resize-none"
+              class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all resize-none"
             >{product.description}</textarea>
           </div>
         </div>
@@ -144,7 +144,7 @@ const { data: categories } = await supabase
                   min="0"
                   required
                   value={product.price}
-                  class="w-full pl-8 pr-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+                  class="w-full pl-8 pr-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -163,7 +163,7 @@ const { data: categories } = await supabase
                   step="0.01"
                   min="0"
                   value={product.compare_price || ''}
-                  class="w-full pl-8 pr-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+                  class="w-full pl-8 pr-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
                 />
               </div>
               <p class="text-xs text-neutral-500 mt-1">Precio antes del descuento</p>
@@ -181,7 +181,7 @@ const { data: categories } = await supabase
                 min="0"
                 required
                 value={product.stock}
-                class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+                class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
               />
             </div>
           </div>
@@ -253,7 +253,7 @@ const { data: categories } = await supabase
                 id="sku"
                 name="sku"
                 value={product.sku || ''}
-                class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+                class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
               />
             </div>
 
@@ -267,7 +267,7 @@ const { data: categories } = await supabase
                 id="material"
                 name="material"
                 value={product.material || ''}
-                class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+                class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
               />
             </div>
 
@@ -281,7 +281,7 @@ const { data: categories } = await supabase
                 id="brand"
                 name="brand"
                 value={product.brand || ''}
-                class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+                class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
               />
             </div>
 
@@ -295,7 +295,7 @@ const { data: categories } = await supabase
                 id="color"
                 name="color"
                 value={product.color || ''}
-                class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+                class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
               />
             </div>
           </div>

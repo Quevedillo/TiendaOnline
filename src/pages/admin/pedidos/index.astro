@@ -141,12 +141,12 @@ const statusOptions = [
             name="search"
             value={searchQuery}
             placeholder="Buscar por ID, email o nombre..."
-            class="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:border-brand-red"
+            class="w-full px-4 py-2 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:border-brand-red"
           />
         </div>
         <select
           name="status"
-          class="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:border-brand-red"
+          class="px-4 py-2 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:border-brand-red"
         >
           {statusOptions.map((opt) => (
             <option value={opt.value} selected={statusFilter === opt.value}>
