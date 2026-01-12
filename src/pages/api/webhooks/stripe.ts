@@ -87,7 +87,7 @@ export const POST: APIRoute = async ({ request }) => {
             user_id: userId,
             stripe_payment_intent_id: paymentIntent.id,
             status: 'failed',
-            total_price: paymentIntent.amount || 0, // Keep in cents (integer)
+            total_amount: paymentIntent.amount || 0, // Keep in cents (integer)
             items: JSON.parse(paymentIntent.metadata.cart_items || '[]'),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
