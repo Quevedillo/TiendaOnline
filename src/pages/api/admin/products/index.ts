@@ -164,24 +164,38 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       finalSlug = `${slug}-${Date.now()}`;
     }
 
-    // Crear producto
-    const productData = {
+    // Crear producto - solo campos que existen en la tabla
+    const productData: any = {
       name,
       slug: finalSlug,
       description,
       category_id: categoryId,
       price,
-      compare_price: body.compare_price ? parseFloat(body.compare_price) : null,
-      cost_price: body.cost_price ? parseFloat(body.cost_price) : null,
       stock,
       images: body.images || [],
-      sku: body.sku?.toString().trim() || null,
-      material: body.material?.toString().trim() || null,
-      brand: body.brand?.toString().trim() || null,
-      color: body.color?.toString().trim() || null,
       is_featured: body.is_featured || false,
-      is_active: body.is_active !== false, // default true
+      is_active: body.is_active !== false,
     };
+
+    // Agregar campos opcionales solo si vienen en el body
+    if (body.compare_price !== undefined && body.compare_price !== null) {
+      productData.compare_price = parseFloat(body.compare_price);
+    }
+    if (body.cost_price !== undefined && body.cost_price !== null) {
+      productData.cost_price = parseFloat(body.cost_price);
+    }
+    if (body.sku) {
+      productData.sku = body.sku?.toString().trim();
+    }
+    if (body.brand) {
+      productData.brand = body.brand?.toString().trim();
+    }
+    if (body.material) {
+      productData.material = body.material?.toString().trim();
+    }
+    if (body.color) {
+      productData.color = body.color?.toString().trim();
+    }
 
     const { data: product, error } = await supabase
       .from('products')
