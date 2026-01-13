@@ -100,18 +100,27 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       };
       quantity: number;
       size: string;
-    }) => ({
-      price_data: {
-        currency: 'eur',
-        product_data: {
-          name: `${item.product.brand ? item.product.brand + ' - ' : ''}${item.product.name}`,
-          description: `Talla: ${item.size}`,
-          images: item.product.images.slice(0, 1), // Stripe allows max 8 images
+    }) => {
+      // Ensure price is in cents for Stripe
+      // If price < 100, assume it's in euros and multiply by 100
+      // If price >= 100, assume it's already in cents
+      const priceInCents = item.product.price < 100 
+        ? Math.round(item.product.price * 100)
+        : item.product.price;
+      
+      return {
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: `${item.product.brand ? item.product.brand + ' - ' : ''}${item.product.name}`,
+            description: `Talla: ${item.size}`,
+            images: item.product.images.slice(0, 1), // Stripe allows max 8 images
+          },
+          unit_amount: priceInCents,
         },
-        unit_amount: item.product.price, // Price is already in cents
-      },
-      quantity: item.quantity,
-    }));
+        quantity: item.quantity,
+      };
+    });
 
     // Get the origin from the request
     const origin = request.headers.get('origin') || 'http://localhost:4322';

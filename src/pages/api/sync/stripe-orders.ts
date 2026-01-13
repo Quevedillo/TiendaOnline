@@ -51,6 +51,21 @@ export const POST: APIRoute = async ({ request }) => {
         // Parse cart items
         const cartItems = JSON.parse(session.metadata.cart_items || '[]');
 
+        // Get the full session with line items to ensure we have the total
+        let total = session.amount_total || 0;
+        
+        if (total === 0 && session.id) {
+          try {
+            const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+              expand: ['line_items'],
+            });
+            total = fullSession.amount_total || 0;
+            console.log(`Retrieved full session total: ${total} cents for session ${session.id}`);
+          } catch (err) {
+            console.error('Error retrieving full session:', err);
+          }
+        }
+
         // Create order in Supabase
         const { error: orderError } = await supabase
           .from('orders')
@@ -58,7 +73,7 @@ export const POST: APIRoute = async ({ request }) => {
             user_id: userId,
             stripe_session_id: session.id,
             stripe_payment_intent_id: session.payment_intent,
-            total_amount: session.amount_total || 0, // Keep in cents (integer)
+            total_amount: total, // Keep in cents (integer)
             status: 'completed',
             shipping_name: (session as any).shipping?.name || null,
             shipping_address: JSON.stringify((session as any).shipping?.address) || null,
@@ -75,6 +90,56 @@ export const POST: APIRoute = async ({ request }) => {
         } else {
           syncedCount++;
           console.log(`Pedido sincronizado: ${session.id} (usuario: ${userId})`);
+
+          // Decrement stock for each item in the order
+          try {
+            for (const item of cartItems) {
+              const productId = item.id;
+              const quantity = item.qty || 1;
+              const size = item.size;
+
+              // Get current product
+              const { data: product, error: fetchError } = await supabase
+                .from('products')
+                .select('stock, sizes_available')
+                .eq('id', productId)
+                .single();
+
+              if (fetchError || !product) {
+                console.error(`Error fetching product ${productId}:`, fetchError);
+                continue;
+              }
+
+              // Decrement total stock
+              const newStock = Math.max(0, (product.stock || 0) - quantity);
+
+              // Update sizes_available if it exists
+              let newSizesAvailable = product.sizes_available || {};
+              if (newSizesAvailable && typeof newSizesAvailable === 'object' && size) {
+                if (newSizesAvailable[size]) {
+                  newSizesAvailable[size] = Math.max(0, (newSizesAvailable[size] || 0) - quantity);
+                }
+              }
+
+              // Update product stock
+              const { error: updateError } = await supabase
+                .from('products')
+                .update({
+                  stock: newStock,
+                  sizes_available: newSizesAvailable,
+                })
+                .eq('id', productId);
+
+              if (updateError) {
+                console.error(`Error updating stock for product ${productId}:`, updateError);
+              } else {
+                console.log(`Stock updated for product ${productId}: ${quantity} -> ${newStock} remaining`);
+              }
+            }
+          } catch (error) {
+            console.error('Error decrementing stock during sync:', error);
+            // Don't fail the sync if stock update fails
+          }
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Error desconocido';

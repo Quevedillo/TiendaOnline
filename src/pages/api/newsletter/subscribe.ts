@@ -54,9 +54,17 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Enviar email de bienvenida
     try {
-      await sendNewsletterWelcomeEmail(email);
+      const emailResult = await sendNewsletterWelcomeEmail(email);
+      console.log(`✅ Email de bienvenida enviado a ${email}:`, emailResult);
     } catch (emailError) {
-      console.error('Error sending welcome email:', emailError);
+      console.error(`❌ Error enviando email a ${email}:`, emailError);
+      // Log más detallado
+      if (emailError instanceof Error) {
+        console.error('Detalles del error:', {
+          message: emailError.message,
+          stack: emailError.stack,
+        });
+      }
       // No fallar si falla el email, el suscriptor ya está registrado
     }
 

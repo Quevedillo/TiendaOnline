@@ -1,6 +1,7 @@
 ---
 import AdminLayout from '@layouts/AdminLayout.astro';
 import { CloudinaryImageUpload } from '@components/islands/CloudinaryImageUpload';
+import { SizeSelector } from '@components/islands/SizeSelector';
 import { supabase } from '@lib/supabase';
 
 // Obtener categorías
@@ -107,7 +108,7 @@ const { data: categories } = await supabase
             {/* Price */}
             <div>
               <label for="price" class="block text-sm font-medium text-neutral-700 mb-2">
-                Precio (EUR) <span class="text-red-500">*</span>
+                Precio Venta (EUR) <span class="text-red-500">*</span>
               </label>
               <div class="relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">€</span>
@@ -124,6 +125,27 @@ const { data: categories } = await supabase
               </div>
             </div>
 
+            {/* Cost Price */}
+            <div>
+              <label for="cost_price" class="block text-sm font-medium text-neutral-700 mb-2">
+                Precio Coste (EUR) <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">€</span>
+                <input
+                  type="number"
+                  id="cost_price"
+                  name="cost_price"
+                  step="0.01"
+                  min="0"
+                  required
+                  class="w-full pl-8 pr-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
+                  placeholder="0.00"
+                />
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">El margen se calculará automáticamente</p>
+            </div>
+
             {/* Stock */}
             <div>
               <label for="stock" class="block text-sm font-medium text-neutral-700 mb-2">
@@ -135,10 +157,18 @@ const { data: categories } = await supabase
                 name="stock"
                 min="0"
                 required
+                value="0"
                 class="w-full px-4 py-3 border border-neutral-300 rounded-lg bg-white text-brand-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-black focus:border-transparent transition-all"
                 placeholder="0"
               />
             </div>
+          </div>
+          
+          {/* Sizes Selection */}
+          <div class="mt-6 pt-6 border-t border-neutral-200">
+            <h3 class="font-semibold text-neutral-900 mb-4">Configurar Tallas y Cantidades</h3>
+            <p class="text-sm text-neutral-600 mb-4">Selecciona qué tallas tienes en stock y cuántos pares de cada una.</p>
+            <SizeSelector client:load stock={0} />
           </div>
         </div>
       </div>
@@ -237,6 +267,8 @@ const { data: categories } = await supabase
   const nameInput = document.getElementById('name') as HTMLInputElement;
   const slugInput = document.getElementById('slug') as HTMLInputElement;
   const imagesInput = document.getElementById('images') as HTMLInputElement;
+  const stockInput = document.getElementById('stock') as HTMLInputElement;
+  const sizesInput = document.querySelector('input[name="sizes_available"]') as HTMLInputElement;
   
   nameInput?.addEventListener('input', () => {
     const slug = nameInput.value
@@ -248,12 +280,27 @@ const { data: categories } = await supabase
     slugInput.value = slug;
   });
 
+  // Actualizar stock en el componente SizeSelector
+  stockInput?.addEventListener('change', () => {
+    const stock = parseInt(stockInput.value) || 0;
+    const event = new CustomEvent('stock-updated', { detail: { stock } });
+    window.dispatchEvent(event);
+  });
+
   // Listen for images from CloudinaryImageUpload
   window.addEventListener('cloudinary-images-updated', ((e: CustomEvent) => {
     console.log('Received cloudinary-images-updated:', e.detail.images);
     if (imagesInput) {
       imagesInput.value = JSON.stringify(e.detail.images || []);
       console.log('Updated images input:', imagesInput.value);
+    }
+  }) as EventListener);
+
+  // Listen for sizes updated
+  window.addEventListener('sizes-updated', ((e: CustomEvent) => {
+    console.log('Received sizes-updated:', e.detail.sizes);
+    if (sizesInput) {
+      sizesInput.value = JSON.stringify(e.detail.sizes || {});
     }
   }) as EventListener);
 
@@ -297,6 +344,16 @@ const { data: categories } = await supabase
         console.warn('Could not parse images:', imagesValue);
         images = [];
       }
+
+      const sizesValue = formData.get('sizes_available')?.toString() || '{}';
+      let sizes_available: Record<string, number> = {};
+      try {
+        sizes_available = JSON.parse(sizesValue);
+        if (typeof sizes_available !== 'object') sizes_available = {};
+      } catch (e) {
+        console.warn('Could not parse sizes:', sizesValue);
+        sizes_available = {};
+      }
       
       const productData = {
         name: name,
@@ -304,8 +361,10 @@ const { data: categories } = await supabase
         description: formData.get('description')?.toString().trim() || '',
         category_id: categoryId,
         price: parseFloat(formData.get('price')?.toString() || '0'),
+        cost_price: parseFloat(formData.get('cost_price')?.toString() || '0'),
         stock: parseInt(formData.get('stock')?.toString() || '0'),
         images: images,
+        sizes_available: sizes_available,
         sku: formData.get('sku')?.toString().trim() || null,
         brand: formData.get('brand')?.toString().trim() || null,
         color: formData.get('color')?.toString().trim() || null,

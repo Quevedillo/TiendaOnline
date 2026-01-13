@@ -64,8 +64,8 @@ const formatDate = (date: string) => {
 const getStatusBadge = (status: string) => {
   const badges: Record<string, { color: string; label: string; icon: string }> = {
     pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Pendiente', icon: '⏳' },
-    paid: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Pagado', icon: '✓' },
-    processing: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Procesando', icon: '⚙️' },
+    paid: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Pagado', icon: '✓' },
+    processing: { color: 'bg-orange-100 text-orange-800 border-orange-200', label: 'Procesando', icon: '⚙️' },
     shipped: { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Enviado', icon: '📦' },
     completed: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Completado', icon: '✅' },
     cancelled: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Cancelado', icon: '❌' },
@@ -90,42 +90,42 @@ const statusOptions = [
     <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
       <a
         href="/admin/pedidos"
-        class={`p-4 rounded-xl border-2 transition-all ${statusFilter === 'all' ? 'border-brand-red bg-brand-red/5' : 'border-neutral-200 bg-white hover:border-neutral-300'}`}
+        class={`p-4 rounded-xl border-2 transition-all h-[100px] flex flex-col justify-center ${statusFilter === 'all' ? 'border-brand-red bg-brand-red/5' : 'border-neutral-200 bg-white hover:border-neutral-300'}`}
       >
         <p class="text-2xl font-bold text-brand-black">{stats.total}</p>
         <p class="text-xs text-neutral-500">Total</p>
       </a>
       <a
         href="/admin/pedidos?status=pending"
-        class={`p-4 rounded-xl border-2 transition-all ${statusFilter === 'pending' ? 'border-yellow-500 bg-yellow-50' : 'border-neutral-200 bg-white hover:border-yellow-200'}`}
+        class={`p-4 rounded-xl border-2 transition-all h-[100px] flex flex-col justify-center ${statusFilter === 'pending' ? 'border-yellow-500 bg-yellow-50' : 'border-neutral-200 bg-white hover:border-yellow-200'}`}
       >
         <p class="text-2xl font-bold text-yellow-600">{stats.pending}</p>
         <p class="text-xs text-neutral-500">Pendientes</p>
       </a>
       <a
         href="/admin/pedidos?status=paid"
-        class={`p-4 rounded-xl border-2 transition-all ${statusFilter === 'paid' ? 'border-green-500 bg-green-50' : 'border-neutral-200 bg-white hover:border-green-200'}`}
+        class={`p-4 rounded-xl border-2 transition-all h-[100px] flex flex-col justify-center ${statusFilter === 'paid' ? 'border-blue-500 bg-blue-50' : 'border-neutral-200 bg-white hover:border-blue-200'}`}
       >
-        <p class="text-2xl font-bold text-green-600">{stats.paid}</p>
+        <p class="text-2xl font-bold text-blue-600">{stats.paid}</p>
         <p class="text-xs text-neutral-500">Pagados</p>
       </a>
       <a
         href="/admin/pedidos?status=shipped"
-        class={`p-4 rounded-xl border-2 transition-all ${statusFilter === 'shipped' ? 'border-purple-500 bg-purple-50' : 'border-neutral-200 bg-white hover:border-purple-200'}`}
+        class={`p-4 rounded-xl border-2 transition-all h-[100px] flex flex-col justify-center ${statusFilter === 'shipped' ? 'border-purple-500 bg-purple-50' : 'border-neutral-200 bg-white hover:border-purple-200'}`}
       >
         <p class="text-2xl font-bold text-purple-600">{stats.shipped}</p>
         <p class="text-xs text-neutral-500">Enviados</p>
       </a>
       <a
         href="/admin/pedidos?status=completed"
-        class={`p-4 rounded-xl border-2 transition-all ${statusFilter === 'completed' ? 'border-green-500 bg-green-50' : 'border-neutral-200 bg-white hover:border-green-200'}`}
+        class={`p-4 rounded-xl border-2 transition-all h-[100px] flex flex-col justify-center ${statusFilter === 'completed' ? 'border-green-500 bg-green-50' : 'border-neutral-200 bg-white hover:border-green-200'}`}
       >
         <p class="text-2xl font-bold text-green-600">{stats.completed}</p>
         <p class="text-xs text-neutral-500">Completados</p>
       </a>
       <a
         href="/admin/pedidos?status=cancelled"
-        class={`p-4 rounded-xl border-2 transition-all ${statusFilter === 'cancelled' ? 'border-red-500 bg-red-50' : 'border-neutral-200 bg-white hover:border-red-200'}`}
+        class={`p-4 rounded-xl border-2 transition-all h-[100px] flex flex-col justify-center ${statusFilter === 'cancelled' ? 'border-red-500 bg-red-50' : 'border-neutral-200 bg-white hover:border-red-200'}`}
       >
         <p class="text-2xl font-bold text-red-600">{stats.cancelled}</p>
         <p class="text-xs text-neutral-500">Cancelados</p>
@@ -226,7 +226,7 @@ const statusOptions = [
                     </td>
                     <td class="px-6 py-4">
                       <p class="font-bold text-brand-black">
-                        {formatCurrency(order.total_amount)}
+                        {order.total_amount !== null && order.total_amount !== undefined ? formatCurrency(order.total_amount) : '0,00 €'}
                       </p>
                     </td>
                     <td class="px-6 py-4">

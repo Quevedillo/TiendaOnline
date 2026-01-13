@@ -75,7 +75,7 @@ kickspremium/
 - **Nano Stores** - Estado persistente del carrito
 
 ### Backend
-- **Supabase** - PostgreSQL + Auth + Storage
+- **Supabase** - PostgreSQL + Auth (base de datos y autenticación)
 - **Row Level Security (RLS)** - Control de acceso granular
 
 ### Features
@@ -118,34 +118,6 @@ npm install
 1. En Supabase Console → SQL Editor
 2. Copiar contenido de `database.sql`
 3. Ejecutar el script completo
-
-#### c. Crear Storage Bucket
-
-En Supabase Console → SQL Editor, ejecutar:
-
-```sql
--- Crear bucket
-INSERT INTO storage.buckets (id, name, public) 
-VALUES ('products-images', 'products-images', true);
-
--- Políticas de acceso
-CREATE POLICY "Public read access"
-  ON storage.objects
-  FOR SELECT
-  USING (bucket_id = 'products-images');
-
-CREATE POLICY "Admin upload access"
-  ON storage.objects
-  FOR INSERT
-  WITH CHECK (
-    bucket_id = 'products-images'
-    AND EXISTS (
-      SELECT 1 FROM admin_users
-      WHERE admin_users.id = auth.uid()
-      AND admin_users.is_active = true
-    )
-  );
-```
 
 ### 3. Variables de entorno
 
@@ -237,10 +209,10 @@ const total = getCartTotal();
 - ✅ Lectura admin: Todos los productos
 - ✅ Escritura/Edición: Solo admins verificados
 
-**Imágenes:**
-- ✅ Lectura pública: Todo el bucket
-- ✅ Subida: Solo admins
-- ✅ Eliminación: Solo admins
+**Imágenes (Cloudinary):**
+- ✅ Carga automática optimizada via CDN
+- ✅ Subida: Solo admins autenticados
+- ✅ URLs almacenadas en base de datos
 
 ### Middleware de Autenticación
 
@@ -322,13 +294,21 @@ La configuración ya está lista en `astro.config.mjs`. Los estilos se aplican a
 </div>
 ```
 
-### Imágenes en Supabase Storage
+### 📸 Imágenes con Cloudinary
+
+Las imágenes se almacenan en **Cloudinary** (no en Supabase Storage). Esto optimiza:
+- ✅ Ancho de banda
+- ✅ Performance de carga
+- ✅ Transformaciones automáticas
+
+Las URLs de Cloudinary se guardan en el array `images` de la tabla `products`:
 
 ```ts
-const imageUrl = supabase.storage
-  .from('products-images')
-  .getPublicUrl(filepath).data.publicUrl;
+// Las imágenes vienen ya como URLs completas de Cloudinary
+const imageUrl = product.images[0]; // https://res.cloudinary.com/...
 ```
+
+Para subir nuevas imágenes, usar el componente `CloudinaryImageUpload` que maneja todo automáticamente.
 
 ## 🐛 Troubleshooting
 
@@ -336,9 +316,9 @@ const imageUrl = supabase.storage
 - Verificar localStorage está habilitado
 - Comprobar que Nano Stores está instalado
 
-**Imágenes no se cargan:**
-- Verificar RLS policies en bucket
-- Comprobar rutas de imagen en base de datos
+**Las imágenes no cargan:**
+- Verificar credenciales de Cloudinary en `.env.local`
+- Comprobar que las URLs de Cloudinary sean válidas en la BD
 
 **Auth no funciona:**
 - Verificar keys de Supabase en `.env.local`

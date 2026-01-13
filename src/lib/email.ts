@@ -1,8 +1,23 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(import.meta.env.RESEND_API_KEY);
+// Validar que existe la clave API de Resend
+if (!import.meta.env.RESEND_API_KEY) {
+  console.warn(
+    '⚠️ ADVERTENCIA: RESEND_API_KEY no está configurada en .env.local\n' +
+    'Los emails NO serán enviados hasta que configures esta variable.\n' +
+    'Ve a https://resend.com para obtener tu clave API gratuita.\n' +
+    'Consulta NEWSLETTER_SETUP.md para más instrucciones.'
+  );
+}
 
-const FROM_EMAIL = 'noreply@kickspremium.com';
+const resend = new Resend(import.meta.env.RESEND_API_KEY || 'placeholder');
+
+/**
+ * Email desde donde se envían los correos
+ * Por defecto: dominio de Resend (onboarding@resend.dev)
+ * Si tienes tu propio dominio verificado, cambia a: noreply@tudominio.com
+ */
+const FROM_EMAIL = import.meta.env.FROM_EMAIL || 'onboarding@resend.dev';
 const ADMIN_EMAIL = import.meta.env.ADMIN_EMAIL || 'admin@kickspremium.com';
 
 interface OrderItem {
@@ -37,6 +52,12 @@ interface OrderDetails {
  */
 export async function sendOrderConfirmationEmail(order: OrderDetails) {
   try {
+    // Validar que está configurado Resend
+    if (!import.meta.env.RESEND_API_KEY) {
+      console.warn('⚠️ RESEND_API_KEY no configurada. Email no será enviado.');
+      return { success: false, error: 'Email service not configured' };
+    }
+
     // Formato de moneda
     const formatPrice = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
@@ -282,7 +303,13 @@ export async function sendOrderConfirmationEmail(order: OrderDetails) {
       html: htmlContent,
     });
 
-    console.log('Confirmation email sent:', result);
+    // Validar respuesta de Resend
+    if (result.error) {
+      console.error('❌ Error desde Resend:', result.error);
+      throw new Error(`Resend error: ${JSON.stringify(result.error)}`);
+    }
+
+    console.log('✅ Confirmation email sent:', result);
     return result;
   } catch (error) {
     console.error('Error sending order confirmation email:', error);
@@ -295,6 +322,12 @@ export async function sendOrderConfirmationEmail(order: OrderDetails) {
  */
 export async function sendNewsletterWelcomeEmail(email: string) {
   try {
+    // Validar que está configurado Resend
+    if (!import.meta.env.RESEND_API_KEY) {
+      console.warn('⚠️ RESEND_API_KEY no configurada. Email de newsletter no será enviado.');
+      return { success: false, error: 'Email service not configured' };
+    }
+
     const htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -389,7 +422,7 @@ export async function sendNewsletterWelcomeEmail(email: string) {
 
       <div class="section">
         <p style="color: #6b7280; font-size: 14px;">
-          Si no deseas recibir estos emails, puedes darte de baja en cualquier momento haciendo clic en el enlace de desuscripción al pie de cada email.
+          Si no deseas recibir estos emails, puedes <a href="https://kickspremium.com/unsubscribe?email=${encodeURIComponent(email)}" style="color: #000; text-decoration: underline;">darte de baja</a> en cualquier momento.
         </p>
         <a href="https://kickspremium.com" class="button">Visita nuestra Tienda</a>
       </div>
@@ -398,6 +431,9 @@ export async function sendNewsletterWelcomeEmail(email: string) {
     <div class="footer">
       <p style="margin: 0; margin-bottom: 8px;">Kicks Premium - Las mejores zapatillas exclusivas</p>
       <p style="margin: 0;">© ${new Date().getFullYear()} Kicks Premium. Todos los derechos reservados.</p>
+      <p style="margin-top: 8px; font-size: 11px;">
+        <a href="https://kickspremium.com/unsubscribe?email=${encodeURIComponent(email)}" style="color: #9ca3af; text-decoration: underline;">Darse de baja del newsletter</a>
+      </p>
     </div>
   </div>
 </body>
@@ -411,12 +447,287 @@ export async function sendNewsletterWelcomeEmail(email: string) {
       html: htmlContent,
     });
 
-    console.log('Newsletter welcome email sent:', result);
+    // Validar respuesta de Resend
+    if (result.error) {
+      console.error('❌ Error desde Resend:', result.error);
+      throw new Error(`Resend error: ${JSON.stringify(result.error)}`);
+    }
+
+    console.log('✅ Newsletter welcome email sent:', result);
     return result;
   } catch (error) {
     console.error('Error sending newsletter welcome email:', error);
     throw error;
   }
+}
+
+/**
+ * Interface para datos de producto en newsletter
+ */
+interface ProductNewsletterData {
+  name: string;
+  slug: string;
+  description: string;
+  price: number; // en centimos
+  images: string[];
+  brand?: string | null;
+  category?: string | null;
+  isLimitedEdition?: boolean;
+}
+
+/**
+ * Enviar email de nuevo producto a un suscriptor del newsletter
+ */
+export async function sendNewProductEmail(
+  subscriberEmail: string,
+  product: ProductNewsletterData
+) {
+  try {
+    // Validar que está configurado Resend
+    if (!import.meta.env.RESEND_API_KEY) {
+      console.warn(`⚠️ RESEND_API_KEY no configurada. Email a ${subscriberEmail} no será enviado.`);
+      throw new Error('Email service not configured');
+    }
+
+    const formatPrice = (cents: number) => `€${(cents / 100).toFixed(2)}`;
+    const productUrl = `https://kickspremium.com/productos/${product.slug}`;
+    const mainImage = product.images?.[0] || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80';
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .header .badge {
+      display: inline-block;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .product-image {
+      width: 100%;
+      max-height: 350px;
+      object-fit: cover;
+    }
+    .content {
+      padding: 30px 20px;
+    }
+    .product-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 8px 0;
+    }
+    .product-brand {
+      font-size: 14px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    .product-description {
+      color: #4b5563;
+      font-size: 15px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .price-section {
+      background-color: #f9fafb;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .price {
+      font-size: 32px;
+      font-weight: 700;
+      color: #000;
+    }
+    .limited-badge {
+      display: inline-block;
+      background-color: #fef3c7;
+      color: #92400e;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    .button {
+      display: block;
+      background-color: #000;
+      color: white;
+      padding: 16px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+      transition: background-color 0.2s;
+    }
+    .button:hover {
+      background-color: #1f2937;
+    }
+    .footer {
+      background-color: #1f2937;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .footer a {
+      color: #9ca3af;
+      text-decoration: underline;
+    }
+    .unsubscribe {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔥 ¡NUEVO DROP!</h1>
+      <span class="badge">Exclusivo para suscriptores</span>
+    </div>
+
+    <img src="${mainImage}" alt="${product.name}" class="product-image" />
+
+    <div class="content">
+      ${product.brand ? `<div class="product-brand">${product.brand}</div>` : ''}
+      
+      <h2 class="product-name">
+        ${product.name}
+        ${product.isLimitedEdition ? '<span class="limited-badge">⚡ Edición Limitada</span>' : ''}
+      </h2>
+      
+      ${product.category ? `<p style="color: #6b7280; font-size: 13px; margin: 0 0 16px 0;">Categoría: ${product.category}</p>` : ''}
+      
+      <p class="product-description">${product.description}</p>
+      
+      <div class="price-section">
+        <span class="price">${formatPrice(product.price)}</span>
+      </div>
+      
+      <a href="${productUrl}" class="button">
+        Ver Producto →
+      </a>
+      
+      <p style="text-align: center; color: #6b7280; font-size: 13px; margin-top: 16px;">
+        ¡No te lo pierdas! Los drops exclusivos vuelan rápido 🚀
+      </p>
+    </div>
+
+    <div class="footer">
+      <p style="margin: 0; margin-bottom: 8px;">
+        <strong style="color: white;">KICKS</strong><span style="color: #ef4444;">PREMIUM</span>
+      </p>
+      <p style="margin: 0;">Las mejores zapatillas exclusivas</p>
+      <p class="unsubscribe">
+        ¿No quieres recibir más emails? <a href="https://kickspremium.com/unsubscribe?email=${encodeURIComponent(subscriberEmail)}">Darse de baja</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: subscriberEmail,
+      subject: `🔥 ¡Nuevo Drop! ${product.name}`,
+      html: htmlContent,
+    });
+
+    return result;
+  } catch (error) {
+    console.error(`Error sending new product email to ${subscriberEmail}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Enviar notificación de nuevo producto a todos los suscriptores del newsletter
+ * Retorna un resumen del envío
+ */
+export async function sendNewProductToAllSubscribers(
+  subscribers: { email: string }[],
+  product: ProductNewsletterData
+): Promise<{ sent: number; failed: number; errors: string[] }> {
+  const results = {
+    sent: 0,
+    failed: 0,
+    errors: [] as string[],
+  };
+
+  // Enviar emails en lotes para evitar rate limits
+  const BATCH_SIZE = 10;
+  const DELAY_BETWEEN_BATCHES = 1000; // 1 segundo entre lotes
+
+  for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
+    const batch = subscribers.slice(i, i + BATCH_SIZE);
+    
+    const batchPromises = batch.map(async (subscriber) => {
+      try {
+        await sendNewProductEmail(subscriber.email, product);
+        results.sent++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push(
+          `${subscriber.email}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    });
+
+    await Promise.all(batchPromises);
+
+    // Esperar antes del siguiente lote (excepto en el último)
+    if (i + BATCH_SIZE < subscribers.length) {
+      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+    }
+  }
+
+  console.log(
+    `Newsletter enviado: ${results.sent} enviados, ${results.failed} fallidos de ${subscribers.length} suscriptores`
+  );
+
+  return results;
 }
 
 /**
@@ -428,6 +739,12 @@ export async function sendAdminNotification(
   metadata?: Record<string, any>
 ) {
   try {
+    // Validar que está configurado Resend
+    if (!import.meta.env.RESEND_API_KEY) {
+      console.warn('⚠️ RESEND_API_KEY no configurada. Email a admin no será enviado.');
+      return { success: false, error: 'Email service not configured' };
+    }
+
     const metadataHtml = metadata
       ? `
         <div style="background-color: #f9fafb; padding: 16px; border-radius: 6px; margin-top: 20px;">

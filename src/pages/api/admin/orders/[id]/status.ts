@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
-import { getSupabaseServiceClient } from '@lib/supabase';
+import { supabase } from '@lib/supabase';
 
-export const POST: APIRoute = async ({ params, request }) => {
+export const POST: APIRoute = async ({ params, request, cookies }) => {
   try {
     const { id } = params;
     
@@ -10,6 +10,43 @@ export const POST: APIRoute = async ({ params, request }) => {
         JSON.stringify({ error: 'Order ID is required' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Verificar autenticación
+    const accessToken = cookies.get('sb-access-token')?.value;
+    const refreshToken = cookies.get('sb-refresh-token')?.value;
+
+    if (!accessToken || !refreshToken) {
+      return new Response(JSON.stringify({ error: 'No autorizado' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Sesión inválida' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Verificar si es admin
+    const { data: adminProfile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    if (!adminProfile?.is_admin) {
+      return new Response(JSON.stringify({ error: 'No tienes permisos de administrador' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const body = await request.json();
@@ -23,8 +60,6 @@ export const POST: APIRoute = async ({ params, request }) => {
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-
-    const supabase = getSupabaseServiceClient();
 
     const { data, error } = await supabase
       .from('orders')

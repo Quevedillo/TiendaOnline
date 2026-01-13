@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { supabase } from '@lib/supabase';
+import { sendNewProductToAllSubscribers } from '@lib/email';
 
 // GET - List all products
 export const GET: APIRoute = async ({ cookies, url }) => {
@@ -131,16 +132,17 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const description = body.description?.toString().trim();
     const categoryId = body.category_id?.toString().trim();
     const price = Math.round((parseFloat(body.price ?? 0) * 100)); // Convertir EUR a centimos
+    const cost_price = Math.round((parseFloat(body.cost_price ?? 0) * 100)); // Convertir EUR a centimos
     const stock = parseInt(body.stock ?? 0);
     const images = Array.isArray(body.images) ? body.images : [];
     const brand = body.brand?.toString().trim() || null;
     const color = body.color?.toString().trim() || null;
 
-    if (!name || !description || !categoryId || isNaN(price) || price < 0 || isNaN(stock) || stock < 0) {
-      console.error('Validación fallida:', { name, description, categoryId, price, stock });
+    if (!name || !description || !categoryId || isNaN(price) || price < 0 || isNaN(cost_price) || cost_price < 0 || isNaN(stock) || stock < 0) {
+      console.error('Validación fallida:', { name, description, categoryId, price, cost_price, stock });
       return new Response(JSON.stringify({ 
         error: 'Faltan campos requeridos o son inválidos',
-        details: { name: !!name, description: !!description, categoryId: !!categoryId, price, stock }
+        details: { name: !!name, description: !!description, categoryId: !!categoryId, price, cost_price, stock }
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -203,13 +205,17 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         description,
         category_id: categoryId,
         price,
+        cost_price,
         stock,
         images: images && images.length > 0 ? images : [],
         brand,
         sku,
         color,
       })
-      .select()
+      .select(`
+        *,
+        categories(name)
+      `)
       .single();
 
     if (error) {
@@ -220,7 +226,61 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, product }), {
+    // Enviar notificación a los suscriptores del newsletter
+    let newsletterResult = null;
+    try {
+      // Obtener todos los suscriptores verificados
+      const { data: subscribers, error: subscribersError } = await supabase
+        .from('newsletter_subscribers')
+        .select('email')
+        .eq('verified', true);
+
+      if (subscribersError) {
+        console.error('Error fetching newsletter subscribers:', subscribersError);
+      } else if (subscribers && subscribers.length > 0) {
+        // Preparar datos del producto para el email
+        const productData = {
+          name: product.name,
+          slug: product.slug,
+          description: product.description || '',
+          price: product.price,
+          images: product.images || [],
+          brand: product.brand,
+          category: product.categories?.name || null,
+          isLimitedEdition: product.is_limited_edition,
+        };
+
+        // Enviar emails de forma asíncrona (no bloqueamos la respuesta)
+        sendNewProductToAllSubscribers(subscribers, productData)
+          .then((result) => {
+            console.log(`✅ Newsletter enviado para producto ${product.slug}:`, result);
+          })
+          .catch((emailError) => {
+            console.error(`❌ Error enviando newsletter para ${product.slug}:`, emailError);
+          });
+
+        newsletterResult = {
+          scheduledFor: subscribers.length,
+          message: 'Notificación programada para enviar a los suscriptores',
+        };
+      } else {
+        newsletterResult = {
+          scheduledFor: 0,
+          message: 'No hay suscriptores verificados',
+        };
+      }
+    } catch (newsletterError) {
+      console.error('Error processing newsletter:', newsletterError);
+      newsletterResult = {
+        error: 'Error al procesar el newsletter',
+      };
+    }
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      product,
+      newsletter: newsletterResult,
+    }), {
       status: 201,
       headers: { 'Content-Type': 'application/json' },
     });

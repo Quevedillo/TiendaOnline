@@ -4,7 +4,7 @@ import { supabase } from '@lib/supabase';
 import { stripe } from '@lib/stripe';
 
 // ============================================================================
-// DATOS DE STRIPE (Fuente principal de ingresos)
+// DATOS DE ÓRDENES Y STRIPE
 // ============================================================================
 interface StripePayment {
   id: string;
@@ -31,34 +31,72 @@ let stripeData = {
   chargesByMonth: new Map<string, number>()
 };
 
+// ============================================================================
+// DATOS DE BD (Orders)
+// ============================================================================
+const { data: orders } = await supabase
+  .from('orders')
+  .select('*')
+  .eq('status', 'completed');
+
+const now = new Date();
+const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+// Calcular ingresos desde BD
+const dbMonthlyRevenue = (orders || [])
+  .filter(o => new Date(o.created_at) >= oneMonthAgo && o.total_amount)
+  .reduce((sum, o) => sum + (o.total_amount || 0), 0);
+
+const dbTodayRevenue = (orders || [])
+  .filter(o => new Date(o.created_at) >= todayStart && o.total_amount)
+  .reduce((sum, o) => sum + (o.total_amount || 0), 0);
+
+const dbPaymentsCount = (orders || [])
+  .filter(o => new Date(o.created_at) >= oneMonthAgo)
+  .length;
+
+// Agrupar órdenes por mes
+const ordersByMonth = new Map<string, number>();
+(orders || []).forEach(order => {
+  if (order.created_at && order.total_amount) {
+    const date = new Date(order.created_at);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const current = ordersByMonth.get(monthKey) || 0;
+    ordersByMonth.set(monthKey, current + order.total_amount);
+  }
+});
+
 try {
   // Obtener balance de Stripe
   const balance = await stripe.balance.retrieve();
   stripeData.balance = balance.available.reduce((sum, b) => sum + b.amount, 0) + 
                        balance.pending.reduce((sum, b) => sum + b.amount, 0);
 
-  // Obtener TODOS los pagos (para calcular ventas totales)
+  // Obtener TODOS los pagos de Stripe
   const allCharges = await stripe.charges.list({ limit: 100 });
-  
-  // Filtros de tiempo
-  const oneMonthAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayTimestamp = Math.floor(todayStart.getTime() / 1000);
+  const stripeTimestamp = Math.floor(oneMonthAgo.getTime() / 1000);
+  const stripeTodayTimestamp = Math.floor(todayStart.getTime() / 1000);
 
   // Filtrar pagos completados
   const paidCharges = allCharges.data.filter(c => c.paid && !c.refunded);
   
-  // Ingresos del mes
-  stripeData.paymentsCount = paidCharges.filter(c => c.created >= oneMonthAgo).length;
-  stripeData.monthlyRevenue = paidCharges
-    .filter(c => c.created >= oneMonthAgo)
+  // Ingresos de Stripe este mes
+  const stripeMonthlyRevenue = paidCharges
+    .filter(c => c.created >= stripeTimestamp)
     .reduce((sum, c) => sum + c.amount, 0);
   
-  // Ingresos de hoy
-  stripeData.todayRevenue = paidCharges
-    .filter(c => c.created >= todayTimestamp)
+  // Ingresos de Stripe hoy
+  const stripeTodayRevenue = paidCharges
+    .filter(c => c.created >= stripeTodayTimestamp)
     .reduce((sum, c) => sum + c.amount, 0);
+
+  stripeData.paymentsCount = paidCharges.filter(c => c.created >= stripeTimestamp).length;
+  
+  // Combinar datos de BD y Stripe (preferir BD si existen, sino Stripe)
+  stripeData.monthlyRevenue = dbMonthlyRevenue || stripeMonthlyRevenue;
+  stripeData.todayRevenue = dbTodayRevenue || stripeTodayRevenue;
+  stripeData.paymentsCount = dbPaymentsCount || stripeData.paymentsCount;
 
   // Agrupar por mes para la gráfica
   paidCharges.forEach(charge => {
@@ -81,6 +119,26 @@ try {
     }));
 } catch (error) {
   console.error('Error fetching Stripe data:', error);
+  // Usar datos de BD si Stripe falla
+  stripeData.monthlyRevenue = dbMonthlyRevenue;
+  stripeData.todayRevenue = dbTodayRevenue;
+  stripeData.paymentsCount = dbPaymentsCount;
+  
+  // Usar órdenes por mes para la gráfica
+  stripeData.chargesByMonth = ordersByMonth;
+  
+  // Usar últimas órdenes como pagos
+  stripeData.recentPayments = (orders || [])
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 10)
+    .map(o => ({
+      id: o.id,
+      amount: o.total_amount || 0,
+      currency: 'EUR',
+      created: new Date(o.created_at),
+      status: 'paid' as const,
+      customer: o.customer_email || 'N/A'
+    }));
 }
 
 // ============================================================================
@@ -105,25 +163,118 @@ const totalInventoryValue = (products || []).reduce((sum, p) => {
 // ============================================================================
 // DATOS PARA GRÁFICA (últimos 6 meses)
 // ============================================================================
-const monthlyData: MonthlyData[] = [];
-const now = new Date();
 
-for (let i = 5; i >= 0; i--) {
-  const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-  const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
-  const monthName = monthDate.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
-  
-  const sales = stripeData.chargesByMonth.get(monthKey) || 0;
-  // Estimamos costes como 40% de las ventas si no hay datos de cost_price
-  const estimatedCosts = sales * 0.4;
-  
-  monthlyData.push({
-    month: monthName,
-    sales: sales / 100,
-    costs: estimatedCosts / 100,
-    profit: (sales - estimatedCosts) / 100
-  });
-}
+// Función para generar datos mensuales
+const generateMonthlyData = () => {
+  const data: MonthlyData[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+    const monthName = monthDate.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
+    
+    const sales = stripeData.chargesByMonth.get(monthKey) || 0;
+    // Estimamos costes como 40% de las ventas si no hay datos de cost_price
+    const estimatedCosts = sales * 0.4;
+    
+    data.push({
+      month: monthName,
+      sales: sales / 100,
+      costs: estimatedCosts / 100,
+      profit: (sales - estimatedCosts) / 100
+    });
+  }
+  return data;
+};
+
+// Función para generar datos semanales (últimas 4 semanas)
+const generateWeeklyData = () => {
+  const data: MonthlyData[] = [];
+  for (let i = 3; i >= 0; i--) {
+    const weekDate = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+    const weekStart = new Date(weekDate.getFullYear(), weekDate.getMonth(), weekDate.getDate() - weekDate.getDay());
+    const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    // Buscar órdenes en esa semana
+    const weekSales = (orders || [])
+      .filter(o => {
+        const oDate = new Date(o.created_at);
+        return oDate >= weekStart && oDate < weekEnd;
+      })
+      .reduce((sum, o) => sum + (o.total_amount || 0), 0);
+    
+    const weekLabel = `${weekStart.getDate()}-${weekEnd.getDate()} ${weekStart.toLocaleDateString('es-ES', { month: 'short' })}`;
+    const estimatedCosts = weekSales * 0.4;
+    
+    data.push({
+      month: weekLabel,
+      sales: weekSales / 100,
+      costs: estimatedCosts / 100,
+      profit: (weekSales - estimatedCosts) / 100
+    });
+  }
+  return data;
+};
+
+// Función para generar datos diarios (últimos 7 días)
+const generateDailyData = () => {
+  const data: MonthlyData[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const dayDate = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+    
+    const daySales = (orders || [])
+      .filter(o => {
+        const oDate = new Date(o.created_at);
+        return oDate >= dayStart && oDate < dayEnd;
+      })
+      .reduce((sum, o) => sum + (o.total_amount || 0), 0);
+    
+    const dayLabel = dayDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+    const estimatedCosts = daySales * 0.4;
+    
+    data.push({
+      month: dayLabel,
+      sales: daySales / 100,
+      costs: estimatedCosts / 100,
+      profit: (daySales - estimatedCosts) / 100
+    });
+  }
+  return data;
+};
+
+// Función para generar datos horarios (últimas 24 horas)
+const generateHourlyData = () => {
+  const data: MonthlyData[] = [];
+  for (let i = 23; i >= 0; i--) {
+    const hourDate = new Date(now.getTime() - i * 60 * 60 * 1000);
+    const hourStart = new Date(hourDate.getFullYear(), hourDate.getMonth(), hourDate.getDate(), hourDate.getHours());
+    const hourEnd = new Date(hourStart.getTime() + 60 * 60 * 1000);
+    
+    const hourSales = (orders || [])
+      .filter(o => {
+        const oDate = new Date(o.created_at);
+        return oDate >= hourStart && oDate < hourEnd;
+      })
+      .reduce((sum, o) => sum + (o.total_amount || 0), 0);
+    
+    const hourLabel = hourStart.toLocaleDateString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const estimatedCosts = hourSales * 0.4;
+    
+    data.push({
+      month: hourLabel,
+      sales: hourSales / 100,
+      costs: estimatedCosts / 100,
+      profit: (hourSales - estimatedCosts) / 100
+    });
+  }
+  return data;
+};
+
+const monthlyData = generateMonthlyData();
+const weeklyData = generateWeeklyData();
+const dailyData = generateDailyData();
+const hourlyData = generateHourlyData();
 
 // ============================================================================
 // FUNCIONES DE FORMATO
@@ -220,9 +371,17 @@ const formatCurrency = (cents: number) => {
 
     {/* Gráfica de Ingresos */}
     <div class="bg-white rounded-xl border border-neutral-200 overflow-hidden">
-      <div class="p-6 border-b border-neutral-200 bg-neutral-50">
-        <h2 class="font-semibold text-brand-black">Ingresos Mensuales</h2>
-        <p class="text-sm text-neutral-500 mt-1">Últimos 6 meses desde Stripe</p>
+      <div class="p-6 border-b border-neutral-200 bg-neutral-50 flex items-center justify-between">
+        <div>
+          <h2 class="font-semibold text-brand-black">Ingresos por Período</h2>
+          <p class="text-sm text-neutral-500 mt-1">Filtra por rango de tiempo</p>
+        </div>
+        <select id="timeRange" class="px-4 py-2 border border-neutral-300 rounded-lg text-sm font-medium bg-white text-brand-black hover:bg-neutral-50 transition-colors">
+          <option value="24h">Últimas 24h</option>
+          <option value="1w">Última semana</option>
+          <option value="1m">Último mes</option>
+          <option value="6m" selected>Últimos 6 meses</option>
+        </select>
       </div>
       <div class="p-6">
         <div class="h-80" id="chart-container">
@@ -418,19 +577,31 @@ const formatCurrency = (cents: number) => {
 </AdminLayout>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script define:vars={{ monthlyData }}>
-  // Crear gráfica con Chart.js
+<script define:vars={{ monthlyData, weeklyData, dailyData, hourlyData }}>
+  let chart = null;
+  const timeRangeSelect = document.getElementById('timeRange');
   const ctx = document.getElementById('financialChart');
   
-  if (ctx) {
-    new Chart(ctx, {
+  const chartDatasets = {
+    '24h': hourlyData,
+    '1w': dailyData,
+    '1m': dailyData.slice(-4),
+    '6m': monthlyData
+  };
+  
+  const createChart = (data) => {
+    if (chart) {
+      chart.destroy();
+    }
+    
+    chart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: monthlyData.map(d => d.month),
+        labels: data.map(d => d.month),
         datasets: [
           {
             label: 'Ventas',
-            data: monthlyData.map(d => d.sales),
+            data: data.map(d => d.sales),
             backgroundColor: 'rgba(34, 197, 94, 0.8)',
             borderColor: 'rgb(34, 197, 94)',
             borderWidth: 1,
@@ -438,7 +609,7 @@ const formatCurrency = (cents: number) => {
           },
           {
             label: 'Costes Est.',
-            data: monthlyData.map(d => d.costs),
+            data: data.map(d => d.costs),
             backgroundColor: 'rgba(248, 113, 113, 0.8)',
             borderColor: 'rgb(248, 113, 113)',
             borderWidth: 1,
@@ -446,7 +617,7 @@ const formatCurrency = (cents: number) => {
           },
           {
             label: 'Beneficio Est.',
-            data: monthlyData.map(d => d.profit),
+            data: data.map(d => d.profit),
             backgroundColor: 'rgba(59, 130, 246, 0.8)',
             borderColor: 'rgb(59, 130, 246)',
             borderWidth: 1,
@@ -491,6 +662,15 @@ const formatCurrency = (cents: number) => {
           }
         }
       }
+    });
+  };
+  
+  if (ctx) {
+    createChart(chartDatasets['6m']);
+    
+    timeRangeSelect?.addEventListener('change', (e) => {
+      const selectedRange = e.target.value;
+      createChart(chartDatasets[selectedRange]);
     });
   }
 </script>

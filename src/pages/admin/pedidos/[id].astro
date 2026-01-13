@@ -101,7 +101,7 @@ const statusOptions = [
             <select
               name="status"
               id="statusSelect"
-              class="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:border-brand-red"
+              class="px-4 py-2 border border-neutral-300 rounded-lg text-brand-black bg-white focus:outline-none focus:border-brand-red"
             >
               {statusOptions.map((opt) => (
                 <option value={opt.value} selected={order.status === opt.value}>
@@ -281,14 +281,17 @@ const statusOptions = [
         body: JSON.stringify({ status }),
       });
       
+      const data = await response.json();
+      
       if (response.ok) {
         window.location.reload();
       } else {
-        alert('Error al actualizar el estado');
+        alert('Error: ' + (data.error || 'Error al actualizar el estado'));
+        console.error('Error response:', data);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al actualizar el estado');
+      alert('Error al actualizar el estado: ' + (error instanceof Error ? error.message : String(error)));
     }
   });
 </script>

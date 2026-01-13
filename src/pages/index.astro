@@ -197,7 +197,7 @@ const { data: categories } = await supabase
     </div>
   </section>
 
-  {/* CTA Section */}
+  {/* CTA Section - Newsletter */}
   <section class="bg-brand-dark py-20">
     <div class="max-w-4xl mx-auto px-4 text-center">
       <h2 class="text-4xl md:text-6xl font-display font-bold text-white uppercase tracking-tight mb-6">
@@ -206,16 +206,99 @@ const { data: categories } = await supabase
       <p class="text-neutral-400 text-lg mb-8">
         Únete a nuestra lista y sé el primero en enterarte de los nuevos lanzamientos y ofertas exclusivas.
       </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+      <form id="newsletter-form-cta" class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
         <input 
           type="email" 
+          id="newsletter-email-cta"
+          name="email"
           placeholder="tu@email.com" 
+          required
           class="bg-brand-gray border border-brand-gray text-white px-6 py-4 flex-1 focus:outline-none focus:border-brand-red"
         />
-        <button class="bg-brand-red text-white px-8 py-4 font-bold uppercase hover:bg-brand-orange transition-colors">
+        <button 
+          type="submit"
+          id="newsletter-btn-cta"
+          class="bg-brand-red text-white px-8 py-4 font-bold uppercase hover:bg-brand-orange transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Suscribirse
         </button>
-      </div>
+      </form>
+      <div id="newsletter-message-cta" class="mt-4 text-sm"></div>
     </div>
   </section>
 </PublicLayout>
+
+<script is:inline>
+  // Handle newsletter subscription (CTA Section)
+  const formCta = document.getElementById('newsletter-form-cta');
+  const emailInputCta = document.getElementById('newsletter-email-cta');
+  const submitBtnCta = document.getElementById('newsletter-btn-cta');
+  const messageDivCta = document.getElementById('newsletter-message-cta');
+
+  if (formCta) {
+    formCta.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = emailInputCta.value.trim();
+
+      if (!email) {
+        showMessageCta('Por favor ingresa un email', 'error');
+        return;
+      }
+
+      // Disable form during submission
+      submitBtnCta.setAttribute('disabled', 'true');
+      submitBtnCta.textContent = 'Suscribiendo...';
+
+      try {
+        const response = await fetch('/api/newsletter/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessageCta(
+            '✓ ¡Gracias por suscribirte! Revisa tu email para confirmar.',
+            'success'
+          );
+          formCta.reset();
+        } else {
+          showMessageCta(
+            data.error || 'Error al suscribirse. Intenta más tarde.',
+            'error'
+          );
+        }
+      } catch (error) {
+        console.error('Newsletter subscription error:', error);
+        showMessageCta('Error de conexión. Intenta más tarde.', 'error');
+      } finally {
+        submitBtnCta.removeAttribute('disabled');
+        submitBtnCta.textContent = 'Suscribirse';
+      }
+    });
+  }
+
+  function showMessageCta(text, type) {
+    if (!messageDivCta) return;
+
+    messageDivCta.textContent = text;
+    messageDivCta.className = `mt-4 text-sm ${
+      type === 'success'
+        ? 'text-green-400'
+        : 'text-red-400'
+    }`;
+
+    if (type === 'success') {
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        messageDivCta.textContent = '';
+        messageDivCta.className = '';
+      }, 5000);
+    }
+  }
+</script>

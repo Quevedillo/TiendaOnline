@@ -89,7 +89,8 @@ ADD COLUMN IF NOT EXISTS cost_price INTEGER DEFAULT NULL,
 ADD COLUMN IF NOT EXISTS is_limited_edition BOOLEAN DEFAULT FALSE,
 ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT FALSE,
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
-ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';
+ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS sizes_available JSONB DEFAULT '{}';
 
 -- Eliminar restricción NOT NULL de brand si existe (permitir valores NULL)
 ALTER TABLE products
@@ -232,7 +233,7 @@ CREATE POLICY "Categories are viewable by everyone" ON categories
 
 -- Insertar productos EXCLUSIVOS con imagenes reales
 INSERT INTO products (
-  name, slug, description, price, stock, category_id, brand, is_limited_edition, sku, images
+  name, slug, description, price, cost_price, stock, category_id, brand, is_limited_edition, sku, images
 ) VALUES
 
 -- TRAVIS SCOTT COLLECTION
@@ -241,6 +242,7 @@ INSERT INTO products (
   'travis-scott-aj1-mocha',
   'Colaboracion iconica con Travis Scott. Swoosh invertido, piel premium en tonos marron mocha y negro. Una de las zapatillas mas cotizadas del mercado. Lanzamiento 2019.',
   89999,
+  45000,
   2,
   (SELECT id FROM categories WHERE slug = 'travis-scott'),
   'Jordan',
@@ -256,6 +258,7 @@ INSERT INTO products (
   'travis-scott-sb-dunk',
   'Colaboracion especial con Nike SB. Cuerdas extra gruesas, paleta de colores unica en marron y crema. Plaid pattern en el interior. Solo quedan 2 pares.',
   59999,
+  28000,
   2,
   (SELECT id FROM categories WHERE slug = 'travis-scott'),
   'Nike',
@@ -271,6 +274,7 @@ INSERT INTO products (
   'travis-scott-aj4-cactus',
   'Air Jordan 4 en colaboracion exclusiva. Suede azul con detalles en rojo. Logo Cactus Jack bordado. Edicion muy limitada 2018.',
   129999,
+  60000,
   1,
   (SELECT id FROM categories WHERE slug = 'travis-scott'),
   'Jordan',
@@ -288,6 +292,7 @@ INSERT INTO products (
   'jordan-1-chicago-og',
   'El clasico absoluto. Colorway original de 1985 que Michael Jordan llevo en su temporada rookie. Piel premium roja, blanca y negra. Icono de la cultura sneaker.',
   149999,
+  70000,
   1,
   (SELECT id FROM categories WHERE slug = 'jordan-special'),
   'Jordan',
@@ -303,6 +308,7 @@ INSERT INTO products (
   'jordan-11-space-jam',
   'Edicion conmemorativa de la pelicula Space Jam (1996). Patent leather negro con suela translucida azul. El numero 45 en el talon. Pieza de coleccion.',
   79999,
+  38000,
   3,
   (SELECT id FROM categories WHERE slug = 'jordan-special'),
   'Jordan',
@@ -318,6 +324,7 @@ INSERT INTO products (
   'jordan-3-black-cement',
   'Diseno de Tinker Hatfield. Elephant print iconico, visible Air unit. La zapatilla que convencio a MJ de quedarse en Nike. Relanzamiento 2018.',
   69999,
+  33000,
   2,
   (SELECT id FROM categories WHERE slug = 'jordan-special'),
   'Jordan',
@@ -333,6 +340,7 @@ INSERT INTO products (
   'jordan-4-bred',
   'Combinacion clasica negro y rojo (Bred). Fire Red accents. Una de las siluetas mas populares de la linea Jordan. Stock muy limitado.',
   64999,
+  31000,
   2,
   (SELECT id FROM categories WHERE slug = 'jordan-special'),
   'Jordan',
@@ -350,6 +358,7 @@ INSERT INTO products (
   'adidas-yeezy-350-zebra',
   'Colaboracion Kanye West. Pattern zebra blanco y negro con SPLY-350 en rojo. Boost cushioning. Una de las Yeezys mas iconicas.',
   39999,
+  18000,
   4,
   (SELECT id FROM categories WHERE slug = 'adidas-collab'),
   'Adidas',
@@ -365,6 +374,7 @@ INSERT INTO products (
   'adidas-yeezy-700-wave',
   'El modelo que revivio la estetica chunky dad shoe. Combinacion de gris, teal y naranja. Boost midsole. Diseno futurista de Kanye.',
   54999,
+  26000,
   2,
   (SELECT id FROM categories WHERE slug = 'adidas-collab'),
   'Adidas',
@@ -380,6 +390,7 @@ INSERT INTO products (
   'adidas-pharrell-nmd-hu',
   'Colaboracion con Pharrell Williams. Primeknit upper con mensaje HUMAN RACE. Boost cushioning. Colores vibrantes exclusivos.',
   44999,
+  21000,
   3,
   (SELECT id FROM categories WHERE slug = 'adidas-collab'),
   'Adidas',
@@ -397,6 +408,7 @@ INSERT INTO products (
   'nike-air-max-90-off-white',
   'Diseno de Virgil Abloh para Nike The Ten. Paneles transparentes, texto deconstructivo, zip-tie naranja. Arte wearable.',
   129999,
+  60000,
   1,
   (SELECT id FROM categories WHERE slug = 'limited-editions'),
   'Nike',
@@ -412,6 +424,7 @@ INSERT INTO products (
   'nb-550-aime-leon-dore',
   'Colaboracion que revivio el modelo 550. Piel premium blanca con acentos en verde. La zapatilla que puso a ALD en el mapa sneaker.',
   34999,
+  16000,
   3,
   (SELECT id FROM categories WHERE slug = 'limited-editions'),
   'New Balance',
@@ -427,6 +440,7 @@ INSERT INTO products (
   'nike-dunk-grateful-dead',
   'Colaboracion con Grateful Dead. Fur upper verde con bolsillo oculto. Oso bordado. Una de las dunks mas creativas jamas hechas.',
   89999,
+  42000,
   1,
   (SELECT id FROM categories WHERE slug = 'limited-editions'),
   'Nike',
@@ -442,6 +456,7 @@ INSERT INTO products (
   'sacai-nike-ldwaffle',
   'Chitose Abe fusiona dos modelos clasicos Nike. Doble swoosh, doble lengüeta, doble suela. Revoluciono el diseno de sneakers.',
   74999,
+  35000,
   2,
   (SELECT id FROM categories WHERE slug = 'limited-editions'),
   'Nike',

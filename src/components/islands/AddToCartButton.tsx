@@ -14,8 +14,10 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
   const [user, setUser] = useState(getCurrentUser());
   const [isLoading, setIsLoading] = useState(true);
 
-  // Tallas numéricas para zapatos (EU)
-  const sizes = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'];
+  // Usar tallas del producto si están disponibles, sino usar tallas por defecto
+  const sizes = product.sizes_available && Object.keys(product.sizes_available).length > 0
+    ? Object.keys(product.sizes_available).sort((a, b) => parseFloat(a) - parseFloat(b))
+    : ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'];
 
   useEffect(() => {
     // Inicializar auth al montar el componente
@@ -59,6 +61,13 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
     setTimeout(() => setFeedback(''), 2000);
   };
 
+  const getSizeAvailability = (size: string): number => {
+    if (product.sizes_available && product.sizes_available[size]) {
+      return product.sizes_available[size];
+    }
+    return product.stock || 0;
+  };
+
   return (
     <div className="space-y-6">
       {/* Loading State */}
@@ -78,23 +87,29 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
       {/* Size Selection */}
       <div>
         <label className="block text-sm font-bold text-white uppercase tracking-wider mb-3">
-          Selecciona tu talla (EU)
+          Selecciona tu talla {product.sizes_available ? '(EU)' : ''}
         </label>
         <div className="grid grid-cols-6 gap-2">
-          {sizes.map((size) => (
-            <button
-              key={size}
-              onClick={() => setSelectedSize(size)}
-              className={`py-3 px-2 text-sm font-bold transition-all ${
-                selectedSize === size
-                  ? 'bg-brand-red text-white'
-                  : 'bg-brand-gray text-white hover:bg-brand-red/20 hover:text-brand-red'
-              } disabled:opacity-30 disabled:cursor-not-allowed`}
-              disabled={product.stock <= 0 || !user}
-            >
-              {size}
-            </button>
-          ))}
+          {sizes.map((size) => {
+            const available = getSizeAvailability(size) > 0;
+            return (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                disabled={!available || !user}
+                className={`py-3 px-2 text-sm font-bold transition-all ${
+                  selectedSize === size
+                    ? 'bg-brand-red text-white'
+                    : available
+                    ? 'bg-brand-gray text-white hover:bg-brand-red/20 hover:text-brand-red cursor-pointer'
+                    : 'bg-neutral-800 text-neutral-500 opacity-50 cursor-not-allowed'
+                }`}
+                title={!available ? 'Talla no disponible' : ''}
+              >
+                {size}
+              </button>
+            );
+          })}
         </div>
       </div>
 

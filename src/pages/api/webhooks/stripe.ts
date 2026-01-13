@@ -44,8 +44,32 @@ export const POST: APIRoute = async ({ request }) => {
         const userId = session.metadata.user_id;
         const cartItems = JSON.parse(session.metadata.cart_items || '[]');
 
-        // Calculate total from session
-        const total = session.amount_total || 0;
+        // Calculate total from session - use amount_total if available, otherwise calculate from line items
+        let total = session.amount_total || 0;
+        
+        console.log(`\n===== WEBHOOK RECEIVED =====`);
+        console.log(`Session ID: ${session.id}`);
+        console.log(`User ID: ${userId}`);
+        console.log(`Amount Total: ${session.amount_total}`);
+        console.log(`Cart Items Count: ${cartItems.length}`);
+        console.log(`Cart Items:`, JSON.stringify(cartItems, null, 2));
+        
+        // If amount_total is 0 or missing, fetch the full session details with line items
+        if (total === 0 && session.id) {
+          console.log(`Total is 0, fetching full session from Stripe...`);
+          try {
+            const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+              expand: ['line_items'],
+            });
+            total = fullSession.amount_total || 0;
+            console.log(`Retrieved full session total: ${total} cents for session ${session.id}`);
+          } catch (err) {
+            console.error('Error retrieving full session:', err);
+          }
+        }
+
+        console.log(`Final total: ${total} cents (${(total / 100).toFixed(2)}€)`);
+        console.log(`===========================\n`);
 
         // Create order in Supabase
         const { data: order, error: orderError } = await supabase
@@ -71,6 +95,63 @@ export const POST: APIRoute = async ({ request }) => {
           console.error('Error saving order to Supabase:', orderError);
         } else {
           console.log(`Order saved for user ${userId}`);
+
+          // Decrement stock for each item in the order
+          try {
+            console.log(`Starting stock decrement for ${cartItems.length} items...`);
+            for (const item of cartItems) {
+              const productId = item.id;
+              const quantity = item.qty || 1;
+              const size = item.size;
+
+              console.log(`\n  Processing item: ${productId} (qty: ${quantity}, size: ${size})`);
+
+              // Get current product
+              const { data: product, error: fetchError } = await supabase
+                .from('products')
+                .select('stock, sizes_available')
+                .eq('id', productId)
+                .single();
+
+              if (fetchError || !product) {
+                console.error(`    ERROR: Could not fetch product ${productId}:`, fetchError);
+                continue;
+              }
+
+              console.log(`    Current stock: ${product.stock}, sizes_available:`, product.sizes_available);
+
+              // Decrement total stock
+              const newStock = Math.max(0, (product.stock || 0) - quantity);
+
+              // Update sizes_available if it exists
+              let newSizesAvailable = product.sizes_available || {};
+              if (newSizesAvailable && typeof newSizesAvailable === 'object' && size) {
+                if (newSizesAvailable[size]) {
+                  newSizesAvailable[size] = Math.max(0, (newSizesAvailable[size] || 0) - quantity);
+                }
+              }
+
+              console.log(`    New stock: ${newStock}, new sizes_available:`, newSizesAvailable);
+
+              // Update product stock
+              const { error: updateError } = await supabase
+                .from('products')
+                .update({
+                  stock: newStock,
+                  sizes_available: newSizesAvailable,
+                })
+                .eq('id', productId);
+
+              if (updateError) {
+                console.error(`    ERROR updating stock for product ${productId}:`, updateError);
+              } else {
+                console.log(`    SUCCESS: Stock updated: ${product.stock} -> ${newStock}`);
+              }
+            }
+            console.log(`Stock decrement completed.\n`);
+          } catch (error) {
+            console.error('ERROR in stock decrement loop:', error);
+          }
 
           // Send order confirmation email
           try {

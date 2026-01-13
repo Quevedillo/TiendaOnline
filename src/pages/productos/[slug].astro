@@ -2,6 +2,7 @@
 import PublicLayout from '@layouts/PublicLayout.astro';
 import ProductGallery from '@components/product/ProductGallery.astro';
 import AddToCartButton from '@components/islands/AddToCartButton';
+import { SizePicker } from '@components/islands/SizePicker';
 import { supabase } from '@lib/supabase';
 import type { Product } from '@lib/supabase';
 
@@ -121,6 +122,16 @@ const { data: relatedProducts } = await supabase
               {product.description}
             </p>
           </div>
+
+          {/* Size Picker if sizes are available */}
+          {product.sizes_available && Object.keys(product.sizes_available).length > 0 ? (
+            <div class="bg-brand-gray p-4 rounded-lg">
+              <SizePicker
+                sizesAvailable={product.sizes_available}
+                client:only="react"
+              />
+            </div>
+          ) : null}
 
           {/* Add to Cart Component (Island) */}
           <div class="pt-4">
