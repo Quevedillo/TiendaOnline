@@ -1,0 +1,1 @@
+ C:\\Users\\jgomq\\Desktop\\tiendaOnline\\kickspremium_mobile\\.dart_tool\\flutter_build\\bd02141f4ac316ce898d34eb43bc7abc\\native_assets.json: 
